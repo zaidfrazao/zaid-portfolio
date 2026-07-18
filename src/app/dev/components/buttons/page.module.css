@@ -1,0 +1,45 @@
+/*
+ * Layout for the Button visual-regression gallery — a knolling grid (overhead
+ * insert, strict gutters, every item labeled) per the Brand Guide. Purely a
+ * capture surface for e2e/buttons.spec.ts; not part of the site's navigation.
+ */
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-6);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.groupLabel {
+  color: var(--color-sepia);
+}
+
+/* Each control gets a padded plate cell so its 2px-offset focus ring is captured
+   inside the cell's bounds during state screenshots. */
+.cell {
+  display: inline-flex;
+  padding: var(--space-2);
+  background-color: var(--color-plate);
+  border: 1px solid var(--color-rule);
+}
