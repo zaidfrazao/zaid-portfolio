@@ -26,6 +26,8 @@ export default defineConfig({
         "src/**/*.d.ts",
         // Root layout is exercised end-to-end (Playwright), not in unit tests.
         "src/app/layout.tsx",
+        // next/font/local can't run under jsdom; exercised via Playwright.
+        "src/app/fonts.ts",
       ],
       // 70% floor per the Testing Strategy. Kept soft locally so a quick
       // `test:coverage` doesn't fail mid-development; hard in CI (PORT-4), where

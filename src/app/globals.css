@@ -52,14 +52,11 @@ body {
   min-height: 100%;
   color: var(--color-umber);
   background: var(--color-paper);
-  font-family:
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    Helvetica,
-    Arial,
-    sans-serif;
+  /* Jost, self-hosted (src/app/fonts.ts). The --font-jost value already carries
+     a metrics-matched fallback chain; system-ui is a belt-and-braces backstop. */
+  font-family: var(--font-jost), system-ui, sans-serif;
+  font-size: 1rem; /* body register, mobile; desktop override below */
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -67,4 +64,142 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* ============================================================================
+ * Typography — "the title cards".
+ *
+ * Source of truth: src/styles/typography.ts (the 8 registers, transcribed from
+ * the Brand Guide → Typography → Registers & Scale). These utility classes are
+ * kept in lockstep with that module by src/styles/typography.test.ts — never
+ * change a size or weight here without changing it there.
+ *
+ * Authored mobile-first: the base rule is the mobile size; the desktop size
+ * lives in the @media (min-width: 768px) block near the end. 768px cleanly
+ * separates the 360px (mobile) and 1440px (desktop) visual-regression
+ * viewports. Centered only where the register says so (intertitle title);
+ * left-aligned for reading prose. Never text-align: justify.
+ * ==========================================================================*/
+
+/* Intertitle kicker — "CHAPTER TWO" line on chapter cards. */
+.register-kicker {
+  font-family: var(--font-jost), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+}
+
+/* Intertitle title — chapter names on plates. Centered, all caps. */
+.register-intertitle {
+  font-family: var(--font-jost), system-ui, sans-serif;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.15;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* H1 — page / chapter titles in content. */
+h1,
+.register-h1 {
+  font-family: var(--font-jost), system-ui, sans-serif;
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+/* H2 — section headers. */
+h2,
+.register-h2 {
+  font-family: var(--font-jost), system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* H3 — subsections, card titles. */
+h3,
+.register-h3 {
+  font-family: var(--font-jost), system-ui, sans-serif;
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+/* Body — prose. The reading register: measured line-height, capped measure. */
+.register-body {
+  font-family: var(--font-jost), system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.65;
+  max-width: 68ch;
+}
+
+/* Raw paragraphs read like body copy but stay unconstrained by measure so
+   they compose inside tableaux; add .register-body for capped prose columns. */
+p {
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+/* Label — buttons, nav, figure labels, chips. All caps, letterspaced. */
+.register-label {
+  font-family: var(--font-jost), system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* Caption — figure captions, metadata. Sepia. */
+.register-caption {
+  font-family: var(--font-jost), system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--color-sepia);
+}
+
+/* JetBrains Mono — strictly functional: code and stat readouts. Never headings
+   or prose (guarded by typography.test.ts). */
+code,
+kbd,
+samp,
+pre,
+.register-stat {
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+/* Desktop register sizes (base 16px). Only registers whose desktop size differs
+   from mobile appear here. */
+@media (min-width: 768px) {
+  body,
+  p {
+    font-size: 1.0625rem;
+  }
+
+  .register-intertitle {
+    font-size: 2.5rem;
+  }
+
+  h1,
+  .register-h1 {
+    font-size: 2.75rem;
+  }
+
+  h2,
+  .register-h2 {
+    font-size: 1.75rem;
+  }
+
+  h3,
+  .register-h3 {
+    font-size: 1.25rem;
+  }
+
+  .register-body {
+    font-size: 1.0625rem;
+  }
 }
