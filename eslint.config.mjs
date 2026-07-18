@@ -14,6 +14,9 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Generated coverage reports (see vitest.config.ts).
     "coverage/**",
+    // Generated Playwright run artifacts (see playwright.config.ts).
+    "playwright-report/**",
+    "test-results/**",
   ]),
 ]);
 
