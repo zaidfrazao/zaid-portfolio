@@ -12,7 +12,7 @@ team:
   lead: "" # Set this to the technical lead's name for review notifications
 
 git:
-  default_branch: main
+  default_branch: develop
   branch_prefixes:
     feature: "feature/"
     bugfix: "fix/"
