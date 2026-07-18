@@ -1,0 +1,57 @@
+/*
+ * Plate chrome — the surface primitive and its border treatments.
+ *
+ * Spec: docs/BRAND_GUIDE.md → Cards & Containers ("plates"), Feedback Patterns
+ * (loading). Every color, space, and border weight is a design-token custom
+ * property from globals.css (single-sourced in src/styles/*.ts) — no literal
+ * hex or px here.
+ *
+ * Hard rules honored: flat elevation — NO box-shadow anywhere (a unit test in
+ * Plate.test.tsx asserts this file contains none); layering is color + hairline
+ * rules only; sharp corners (global radius 0); no transform. The frame line is
+ * a real edge border here (the featured plate treatment), distinct from the
+ * inset proscenium `.frame-line` utility used for page-level tableaux.
+ */
+
+.plate {
+  /* Plate fill on the Paper ground — the layer is read by color, not depth. */
+  background-color: var(--color-plate);
+  padding: var(--space-4);
+}
+
+/* 1px Rule hairline border — the quiet container edge. */
+.rule {
+  border: 1px solid var(--color-rule);
+}
+
+/* Featured 1.5px frame line, drawn on the plate's edge. Sienna by default. */
+.frame {
+  border: var(--frame-line-width) solid var(--color-sienna);
+}
+
+/* The quieter Rule ink for the frame line. */
+.frameRule {
+  border-color: var(--color-rule);
+}
+
+/*
+ * Empty-plate loading state — static placeholder rules, never a shimmer
+ * (Brand Guide Feedback Patterns: shimmer is ambient motion). A short stack of
+ * Rule hairlines standing in for content; no animation, no transform.
+ */
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.placeholderRule {
+  display: block;
+  height: 1px;
+  background-color: var(--color-rule);
+}
+
+/* The first rule reads as a heading line — a touch wider-spaced, still static. */
+.placeholderRule:first-child {
+  margin-bottom: var(--space-1);
+}
