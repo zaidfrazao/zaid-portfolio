@@ -15,9 +15,7 @@ next-env.d.ts
 coverage/
 
 # env files
-.env
-.env.local
-.env.*.local
+.env*
 
 # editors
 .idea/
