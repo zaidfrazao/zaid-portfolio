@@ -3,13 +3,13 @@
 project:
   name: "zaid-portfolio"
   description: "Personal portfolio site"
-  type: web-app  # web-app, api, cli, library, desktop-app, mobile-app, fullstack
+  type: web-app # web-app, api, cli, library, desktop-app, mobile-app, fullstack
 
 user:
-  mode: technical  # technical or non-technical
+  mode: technical # technical or non-technical
 
 team:
-  lead: ""  # Set this to the technical lead's name for review notifications
+  lead: "" # Set this to the technical lead's name for review notifications
 
 git:
   default_branch: main
@@ -32,10 +32,10 @@ build:
   dev_port: 3000
 
 project_management:
-  provider: notetask         # lakar | notetask
-  client: ""                 # lakar only — your Lakar client name
+  provider: notetask # lakar | notetask
+  client: "" # lakar only — your Lakar client name
   project_identifier: "PORT" # notetask only — e.g. NOTET
-  workspace: "Personal"      # notetask only
+  workspace: "Personal" # notetask only
   statuses:
     todo: "todo"
     in_progress: "in_progress"

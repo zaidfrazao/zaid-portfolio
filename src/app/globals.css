@@ -1,0 +1,51 @@
+/*
+ * Global baseline. The disciplined brand palette, type scale, and motion
+ * tokens are defined in the Foundation & Design System tasks (see
+ * docs/BRAND_GUIDE.md). These are placeholder neutrals only.
+ *
+ * No dark mode: one palette is the brand (PRD Non-Goals).
+ */
+
+:root {
+  --color-paper: #f5f2ea;
+  --color-ink: #1a1a1a;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100%;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
