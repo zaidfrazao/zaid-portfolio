@@ -1,0 +1,18 @@
+name: PR
+
+# Every PR into an integration branch runs the full staged pipeline with the
+# lean browser set (Chromium + mobile), per docs/TESTING_STRATEGY.md.
+on:
+  pull_request:
+    branches: [develop, main]
+
+# A new push to the PR supersedes in-flight runs for the same ref.
+concurrency:
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/ci-pipeline.yml
+    with:
+      full_browser_matrix: false

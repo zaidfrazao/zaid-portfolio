@@ -1,0 +1,21 @@
+version: 2
+
+# Dependency scanning per docs/TESTING_STRATEGY.md (Security Testing). npm audit
+# blocks PRs on high/critical; Dependabot keeps everything else moving with
+# weekly update PRs — including the action versions pinned in the workflows.
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      # Batch dev-dependency bumps into one PR to cut review noise; production
+      # deps (next/react) stay individual so they get scrutiny on their own.
+      dev-dependencies:
+        dependency-type: development
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

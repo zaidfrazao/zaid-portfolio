@@ -1,0 +1,132 @@
+name: CI Pipeline
+
+# Reusable pipeline called by pr.yml (Chromium + mobile) and main.yml (full
+# browser matrix). The staged sequence and gates come from docs/TESTING_STRATEGY.md
+# (CI/CD Integration): lint & types -> unit + integration (coverage gate) ->
+# build -> E2E (a11y + visual). `needs:` chains the stages so a red stage stops
+# the ones after it; `audit` runs in parallel as an independent security gate.
+on:
+  workflow_call:
+    inputs:
+      full_browser_matrix:
+        description: >-
+          When true, run the full Playwright matrix (Chromium + mobile + Firefox
+          + WebKit). PRs run Chromium + mobile only; merge-to-main runs all four.
+        type: boolean
+        default: false
+
+# Node version lives in one place; package.json `engines` requires >=22.
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  lint_types:
+    name: Lint & types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+
+  unit:
+    name: Unit + integration (coverage gate)
+    needs: lint_types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      # GitHub Actions always sets CI=true, so vitest.config.ts enforces the 70%
+      # floor here (soft locally, hard in CI).
+      - run: npm run test:coverage
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+
+  build:
+    name: Build (next)
+    needs: unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+  e2e:
+    name: E2E + a11y + visual
+    needs: build
+    runs-on: ubuntu-latest
+    # Pinned to the installed @playwright/test version so the bundled browsers
+    # and — crucially — the font renderer match the committed *-linux.png visual
+    # baselines. The container also ships Firefox + WebKit with their system
+    # libraries, solving the WSL gap noted in playwright.config.ts. Bump this in
+    # lockstep with the @playwright/test devDependency.
+    container:
+      image: mcr.microsoft.com/playwright:v1.61.1-noble
+    env:
+      # '1' => full matrix (adds Firefox + WebKit via playwright.config.ts);
+      # '' is falsy, so PRs stay on Chromium + mobile.
+      PW_ALL_BROWSERS: ${{ inputs.full_browser_matrix && '1' || '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      # Browsers are preinstalled in the image — no `playwright install` step.
+      # webServer in playwright.config.ts builds + serves the production output.
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-${{ inputs.full_browser_matrix && 'main' || 'pr' }}
+          path: playwright-report/
+          retention-days: 7
+
+  audit:
+    name: Security audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      # Security Testing (docs/TESTING_STRATEGY.md): fail on high/critical.
+      # Moderate/low are surfaced as Dependabot PRs rather than blocking here.
+      - run: npm audit --audit-level=high
+
+# ── Lighthouse CI (placeholder) ──────────────────────────────────────────────
+# Performance budgets (LCP/CLS/TBT, bundle size) land in Phase 5 (Performance &
+# Mobile), per this task's Testing Notes and the CI/CD diagram in
+# docs/TESTING_STRATEGY.md. When implemented, add a job like:
+#
+#   lighthouse:
+#     name: Lighthouse CI
+#     needs: build
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#       - uses: actions/setup-node@v4
+#         with:
+#           node-version: "22"
+#           cache: npm
+#       - run: npm ci
+#       - run: npx @lhci/cli autorun
