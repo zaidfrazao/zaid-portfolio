@@ -14,6 +14,13 @@ next-env.d.ts
 # testing
 coverage/
 
+# playwright — reports & run artifacts are transient; baselines under
+# e2e/__screenshots__/ are committed on purpose (reviewed as design changes).
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
 # env files
 .env*
 
