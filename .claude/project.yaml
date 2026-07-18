@@ -9,7 +9,7 @@ user:
   mode: technical # technical or non-technical
 
 team:
-  lead: "" # Set this to the technical lead's name for review notifications
+  lead: "Zaid Frazao" # Set this to the technical lead's name for review notifications
 
 git:
   default_branch: develop
