@@ -22,6 +22,8 @@ jobs:
       # Generate all four projects (Chromium, mobile, Firefox, WebKit) so the
       # merge-to-main matrix has baselines too.
       PW_ALL_BROWSERS: "1"
+      # Firefox won't launch as root unless HOME is root-owned (see ci-pipeline.yml).
+      HOME: /root
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

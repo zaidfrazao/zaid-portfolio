@@ -82,6 +82,10 @@ jobs:
       # '1' => full matrix (adds Firefox + WebKit via playwright.config.ts);
       # '' is falsy, so PRs stay on Chromium + mobile.
       PW_ALL_BROWSERS: ${{ inputs.full_browser_matrix && '1' || '' }}
+      # GitHub runs container jobs as root with HOME=/github/home (owned by
+      # pwuser); Firefox refuses to launch as root when HOME isn't root-owned.
+      # Pointing HOME at root's own home lets Firefox (full matrix) start.
+      HOME: /root
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
