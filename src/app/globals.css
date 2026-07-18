@@ -1,14 +1,33 @@
 /*
- * Global baseline. The disciplined brand palette, type scale, and motion
- * tokens are defined in the Foundation & Design System tasks (see
- * docs/BRAND_GUIDE.md). These are placeholder neutrals only.
+ * Palette design tokens — "the film stock". The single source of truth for
+ * color is src/styles/tokens.ts; these custom properties mirror it and are
+ * kept in lockstep by a parity test (src/styles/tokens.test.ts). Spec:
+ * docs/BRAND_GUIDE.md → Color Palette.
  *
- * No dark mode: one palette is the brand (PRD Non-Goals).
+ * No dark mode: one palette is the brand (Brand Guide Hard Rule 4 / PRD
+ * Non-Goals). There is deliberately no dark variant or theme toggle.
  */
 
 :root {
-  --color-paper: #f5f2ea;
-  --color-ink: #1a1a1a;
+  /* Primary inks — not floods; the default ground is always Paper. */
+  --color-sienna: #a64826; /* primary actions, links, chapter accents */
+  --color-teal: #1f5f5b; /* secondary actions, focus rings, plates */
+  /* Mustard: decorative ONLY (dividers, ornaments). Never text on Paper
+     (1.78:1 — fails). Keep under ~5% of any view. */
+  --color-mustard: #d9a62e;
+
+  /* Semantic */
+  --color-success: #456f41;
+  --color-warning: #8a6a1c;
+  --color-error: #9c3b22;
+  --color-info: var(--color-teal); /* reuses Teal — no separate info blue */
+
+  /* Neutrals */
+  --color-paper: #efe5cf; /* page background */
+  --color-plate: #f7f0de; /* cards, elevated panels, form fields */
+  --color-rule: #d6c7a4; /* hairline borders, dividers */
+  --color-umber: #2b2118; /* body text (12.58:1 on Paper) */
+  --color-sepia: #6a5c47; /* captions, metadata (5.19:1 on Paper) */
 }
 
 *,
@@ -31,7 +50,7 @@ body {
 
 body {
   min-height: 100%;
-  color: var(--color-ink);
+  color: var(--color-umber);
   background: var(--color-paper);
   font-family:
     system-ui,

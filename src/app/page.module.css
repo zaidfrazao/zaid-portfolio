@@ -25,9 +25,9 @@
   font-size: 0.75rem;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  /* 70% ink over paper clears WCAG AA (~5.4:1) for this small uppercase text;
+  /* 70% Umber over Paper clears WCAG AA for this small uppercase text;
      55% failed the axe contrast check (~3.7:1). Kept muted, just accessible. */
-  color: color-mix(in srgb, var(--color-ink) 70%, transparent);
+  color: color-mix(in srgb, var(--color-umber) 70%, transparent);
 }
 
 .name {
@@ -39,5 +39,5 @@
 
 .positioning {
   font-size: clamp(1rem, 3vw, 1.25rem);
-  color: color-mix(in srgb, var(--color-ink) 75%, transparent);
+  color: color-mix(in srgb, var(--color-umber) 75%, transparent);
 }
