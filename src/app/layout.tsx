@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+
+import { jost, mono } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${jost.variable} ${mono.variable}`}>
       <body>{children}</body>
     </html>
   );
