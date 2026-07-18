@@ -1,0 +1,33 @@
+/*
+ * Layout for the ChapterIndex visual-regression gallery — a knolling stage
+ * (overhead insert, strict gutters, labeled) per the Brand Guide. Purely a
+ * capture surface for e2e/chapter-index.spec.ts; not part of the site's
+ * navigation. Mirrors the Button gallery layout so baselines read consistently.
+ */
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-6);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.groupLabel {
+  color: var(--color-sepia);
+}
+
+/* The nav sits on a padded plate cell so its 2px-offset focus ring is captured
+   inside the cell's bounds during the focus-state screenshot. */
+.cell {
+  display: inline-flex;
+  padding: var(--space-2);
+  background-color: var(--color-plate);
+  border: 1px solid var(--color-rule);
+}
