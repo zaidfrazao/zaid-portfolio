@@ -6,7 +6,11 @@ name: Update visual baselines (manual)
 # once via the Actions tab / `gh workflow run`, download the `updated-baselines`
 # artifact, commit it, and delete this file.
 on:
-  workflow_dispatch:
+  # Branch-scoped push trigger (not workflow_dispatch, which needs the file on
+  # the default branch). Fires on push to the PORT-4 branch; removed with the
+  # baseline commit.
+  push:
+    branches: [chore/PORT-4-ci-pipeline-coverage-audit]
 
 jobs:
   update:
