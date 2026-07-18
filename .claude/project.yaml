@@ -32,18 +32,18 @@ build:
   dev_port: 3000
 
 project_management:
-  provider: lakar            # lakar | notetask
+  provider: notetask         # lakar | notetask
   client: ""                 # lakar only — your Lakar client name
-  project_identifier: ""     # notetask only — e.g. NOTET
-  workspace: ""              # notetask only
+  project_identifier: "PORT" # notetask only — e.g. NOTET
+  workspace: "Personal"      # notetask only
   statuses:
-    todo: "Todo"
-    in_progress: "In Progress"
-    in_review: "In Review"
-    done: "Done"
+    todo: "todo"
+    in_progress: "in_progress"
+    in_review: "in_review"
+    done: "done"
     paused: null
     blocked: null
-    canceled: null
+    canceled: "canceled"
 
 commits:
   types:
