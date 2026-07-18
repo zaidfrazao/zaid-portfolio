@@ -1,0 +1,174 @@
+/*
+ * NavCandidateB — PORT-14 spike styles (throwaway; learnings are the
+ * deliverable). Token-only per project convention: no literal hex, and the
+ * lateral-truck timing is expressed as LOCAL custom properties here rather than
+ * global "--duration" / "--ease" tokens. Structurally identical to candidate A;
+ * the differences are the scroll-hijack guards on .viewport (touch-action /
+ * overscroll-behavior / user-select) that let the branded truck play instead of
+ * native scrolling.
+ */
+
+.prototype {
+  /* Lateral truck (Brand Guide → Animation & Motion): adjacent-chapter move,
+     700–900ms, mechanical easing that never overshoots. Mid-band 800ms.
+     NOTE: keep in lockstep with TRUCK_MS in NavCandidateB.tsx (the input lock). */
+  --truck-duration: 800ms;
+  --truck-ease: cubic-bezier(0.45, 0.05, 0.55, 0.95);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Controls ------------------------------------------------------------------ */
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.index {
+  min-width: 0;
+}
+
+.indexList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  list-style: none;
+}
+
+/* Rough index links: buttons that read like the shipped ChapterIndex — the
+   current chapter marked in Sienna. Micro-UI hover only (Brand Guide 120–180ms);
+   the settled state carries no motion. */
+.indexLink {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-umber);
+  padding: var(--space-1) 0;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: var(--space-1);
+  transition: text-decoration-color 150ms ease-out;
+}
+
+.indexLink:hover {
+  text-decoration-color: var(--color-sienna);
+}
+
+.indexLink[data-current] {
+  color: var(--color-sienna);
+  text-decoration-color: var(--color-sienna);
+}
+
+.prevNext {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Viewport & truck track ---------------------------------------------------- */
+
+.viewport {
+  position: relative;
+  overflow: hidden;
+  /* A locked-off stage. vh (not px) keeps this token-compliant. */
+  height: 68vh;
+  outline: var(--frame-line-width) solid var(--color-rule);
+  outline-offset: calc(-1 * var(--frame-line-inset));
+  /* Scroll-hijack guards: the JS consumes wheel/touch to drive the truck, so
+     stop the browser starting its own pan/scroll (touch-action), stop scroll
+     chaining to the page behind the stage (overscroll-behavior), and stop a
+     swipe from selecting the tableau text (user-select). This is the crux of the
+     mobile pitfall documented in docs/prototypes/PORT-14-candidate-b.md. */
+  touch-action: none;
+  overscroll-behavior: contain;
+  user-select: none;
+}
+
+/* The rail. translateX by whole viewports; --truck-i comes from React state.
+   This is the ONLY moving element — settled states are perfectly still. */
+.track {
+  display: flex;
+  height: 100%;
+  transform: translateX(calc(var(--truck-i, 0) * -100%));
+  transition: transform var(--truck-duration) var(--truck-ease);
+  will-change: transform;
+}
+
+.panel {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-8);
+}
+
+/* Faint per-chapter washes so the truck reads as moving between distinct rooms.
+   color-mix keeps every value token-derived — no literal inks. Stays light so
+   Umber type keeps its contrast. */
+.panel[data-chapter="about"] {
+  background: color-mix(in srgb, var(--color-paper) 92%, var(--color-sienna));
+}
+
+.panel[data-chapter="experience"] {
+  background: color-mix(in srgb, var(--color-paper) 92%, var(--color-teal));
+}
+
+.panel[data-chapter="projects"] {
+  background: color-mix(in srgb, var(--color-paper) 90%, var(--color-mustard));
+}
+
+.panel[data-chapter="contact"] {
+  background: color-mix(in srgb, var(--color-paper) 92%, var(--color-sepia));
+}
+
+.kicker {
+  color: var(--color-sepia);
+}
+
+.title {
+  color: var(--color-umber);
+}
+
+/* Gray-box tableau body — the empty Plate placeholder stands in for real chapter
+   content (none authored yet). Sized to feel like a composed panel. */
+.tableau {
+  width: min(72ch, 100%);
+  min-height: 40%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Visually-hidden status line (aria-live announces the settled chapter). */
+.srStatus {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* prefers-reduced-motion: the truck becomes a straight cut — instant, no travel
+   (Brand Guide hard rule; content parity preserved). The input lock shortens to
+   a brief debounce to match (see NavCandidateB.tsx). */
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    transition: none;
+  }
+
+  .indexLink {
+    transition: none;
+  }
+}
