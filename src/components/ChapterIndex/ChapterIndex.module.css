@@ -1,0 +1,71 @@
+/*
+ * Chapter index chrome — the persistent navigation register.
+ *
+ * Spec: docs/BRAND_GUIDE.md → Navigation (chapter index, current in Sienna) and
+ * Accessibility (2px Teal focus outline, 2px offset). Every color, space, and
+ * border weight is a design-token custom property from globals.css (single-
+ * sourced in src/styles/*.ts) — no literal hex or px. Typography is NOT set
+ * here: the links carry the global `.register-label` utility so the Label
+ * register stays single-sourced (src/styles/typography.ts).
+ *
+ * Hard rules honored: flat (no box-shadow — a unit test asserts this file
+ * declares none), sharp corners (global radius 0), restrained Micro-UI hover
+ * (underline reveal within the 120–180ms band, no lift/scale/shadow).
+ */
+
+/* The chapter row. Wraps rather than overflowing so the four chapters stay
+   fully visible at the 360px launch-gate width. */
+.nav {
+  display: flex;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: inline-flex;
+}
+
+/* Chapter link: Umber label at rest (inherited via the global `a` reset),
+   underline present but transparent until hover — a color transition is
+   animatable where the `text-decoration` shorthand is not (same technique as
+   Button). */
+.link {
+  color: var(--color-umber);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.25em;
+
+  /* Micro UI (hover): 150ms sits inside the Brand Guide's 120–180ms band,
+     ease-out. Only the underline color animates — never position or size. */
+  transition: text-decoration-color 150ms ease-out;
+}
+
+.link:hover {
+  text-decoration-color: currentColor;
+}
+
+/* Current chapter — marked in Sienna (Brand Guide → Navigation). AA 4.69:1 on
+   Paper, verified in the contrast guard. */
+.link[aria-current="page"] {
+  color: var(--color-sienna);
+}
+
+/* Visible keyboard focus — 2px Teal outline, 2px offset (Brand Guide → A11y). */
+.link:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 2px;
+}
+
+/* prefers-reduced-motion: straight cut — no state easing. */
+@media (prefers-reduced-motion: reduce) {
+  .link {
+    transition: none;
+  }
+}
