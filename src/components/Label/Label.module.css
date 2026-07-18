@@ -1,0 +1,28 @@
+/*
+ * Label chrome — the Label register and its optional chip treatment.
+ *
+ * Spec: docs/BRAND_GUIDE.md → Typography ("Label"), Cards & Containers (chips).
+ * The register itself (size, weight, tracking, case) is the global
+ * `.register-label` utility; this file adds only the chip's edge and padding.
+ * Every value is a design-token custom property from globals.css — no literal
+ * hex or px.
+ *
+ * Hard rules honored: flat (no box-shadow — a unit test asserts this file
+ * declares none), sharp corners (global radius 0), color-and-hairline layering
+ * only.
+ */
+
+/* Bare label: inline text, Umber ink inherited from body. The register class
+   carries the type; this hook exists for composition and selection. */
+.label {
+  color: var(--color-umber);
+}
+
+/* Register chip: the label boxed on the Plate fill with a 1px Rule hairline.
+   inline-block so it hugs its text and sits in running metadata rows. */
+.chip {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  background-color: var(--color-plate);
+  border: 1px solid var(--color-rule);
+}

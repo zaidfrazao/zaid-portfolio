@@ -1,0 +1,36 @@
+/*
+ * Layout for the Caption visual-regression gallery — a knolling grid (overhead
+ * insert, strict gutters, every item labeled) per the Brand Guide. Purely a
+ * capture surface; not part of the site's navigation.
+ */
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-6);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+.groupLabel {
+  color: var(--color-sepia);
+}
