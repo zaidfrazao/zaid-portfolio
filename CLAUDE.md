@@ -23,6 +23,20 @@ Project settings are in `.claude/project.yaml`. This includes:
 - Lakar workflow statuses
 - Team configuration
 
+## Testing Screenshots
+
+Screenshots captured during testing (e.g. Playwright visual checks in `/zao:test-task`)
+are **transient artifacts**, never committed. Rules:
+
+- **Location:** write every testing screenshot into `test-screenshots/` at the repo
+  root — nowhere else (not the repo root, not `docs/`, not `src/`). The folder is
+  gitignored.
+- **Cleanup:** delete the screenshots (empty or remove `test-screenshots/`) as soon as
+  the visual check that produced them is finished.
+- **Finish gate:** before completing a task (`/zao:finish-task`, and when wrapping up
+  `/zao:test-task`), verify `test-screenshots/` is empty or absent. A task must not be
+  finished while testing screenshots still exist on disk.
+
 ## Slash Commands
 
 ### Project Setup (`/fra:` commands)

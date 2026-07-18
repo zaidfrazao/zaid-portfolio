@@ -40,3 +40,6 @@ yarn-error.log*
 # Claude Code artifacts
 .playwright-mcp/
 .changeset/
+
+# transient testing screenshots (see CLAUDE.md)
+test-screenshots/
