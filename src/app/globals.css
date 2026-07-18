@@ -30,12 +30,46 @@
   --color-sepia: #6a5c47; /* captions, metadata (5.19:1 on Paper) */
 }
 
+/*
+ * Spacing & layout primitives — "the stage blocking". Source of truth is
+ * src/styles/layout.ts; these custom properties mirror it and are kept in
+ * lockstep by a parity test (src/styles/layout.test.ts). Spec:
+ * docs/BRAND_GUIDE.md → Spacing & Layout.
+ */
+:root {
+  /* 8px spacing scale. Var name = multiplier (--space-4 = 4 × 8px = 2rem).
+     Curated multiples of 8; no 4px half-step — the grammar stays on the grid. */
+  --space-0: 0;
+  --space-1: 0.5rem; /* 8px */
+  --space-2: 1rem; /* 16px */
+  --space-3: 1.5rem; /* 24px */
+  --space-4: 2rem; /* 32px */
+  --space-6: 3rem; /* 48px */
+  --space-8: 4rem; /* 64px */
+  --space-12: 6rem; /* 96px */
+  --space-16: 8rem; /* 128px */
+
+  /* Corners: sharp everywhere, circle only for the rare medallion. */
+  --radius-none: 0;
+  --radius-medallion: 50%;
+
+  /* Proscenium frame line — 1.5px hairline, Sienna default / Rule alt. */
+  --frame-line-width: 1.5px;
+  --frame-line-inset: var(--space-2); /* how far the frame sits in from the edge */
+
+  /* Prose reading measure. */
+  --measure-prose: 68ch;
+}
+
 *,
 *::before,
 *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  /* Global radius 0: no rounded corners anywhere. The medallion exception opts
+     back in locally with var(--radius-medallion). */
+  border-radius: var(--radius-none);
 }
 
 html {
@@ -202,4 +236,34 @@ pre,
   .register-body {
     font-size: 1.0625rem;
   }
+}
+
+/* ============================================================================
+ * Spacing & layout primitives — "the stage blocking".
+ *
+ * Source of truth: src/styles/layout.ts (8px scale, radius, frame line, prose
+ * measure), transcribed from the Brand Guide → Spacing & Layout. Kept in
+ * lockstep with that module by src/styles/layout.test.ts. The --space-*,
+ * --radius-*, --frame-line-*, and --measure-* custom properties live in :root
+ * near the top of this file; these are the reusable treatments built on them.
+ * ==========================================================================*/
+
+/* Proscenium frame line — an inset 1.5px hairline for key tableaux. Drawn with
+   outline (no layout shift, no drop shadow — flat by decree) offset inward, so
+   the frame sits *inside* the box edge. Sienna by default; add .frame-line--rule
+   for the quieter Rule variant. Deliberate treatment — not every container. */
+.frame-line {
+  outline: var(--frame-line-width) solid var(--color-sienna);
+  outline-offset: calc(-1 * var(--frame-line-inset));
+}
+
+.frame-line--rule {
+  outline-color: var(--color-rule);
+}
+
+/* Prose measure — caps reading columns at 68ch and centers them on the vertical
+   axis (symmetric margins are part of the composition). */
+.measure-prose {
+  max-width: var(--measure-prose);
+  margin-inline: auto;
 }
