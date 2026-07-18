@@ -1,0 +1,215 @@
+/*
+ * NavCandidateC — PORT-15 spike styles (throwaway; learnings are the
+ * deliverable). Token-only per project convention: no literal inks, and the
+ * motion timing lives in LOCAL custom properties here rather than global
+ * "--duration" / "--ease" tokens (promoting those is Phase-3 work).
+ *
+ * Two things differ from candidates A/B:
+ *   1. The track branches its transition on distance via [data-transit]:
+ *      truck (800ms) for adjacent moves, whip-pan (~350ms) for distant jumps,
+ *      the latter with a brief blur pulse via [data-blurring].
+ *   2. The viewport does NOT hijack scroll (no touch-action:none). Each .panel
+ *      is its own NATIVE vertical scroll context — scroll drives progress
+ *      WITHIN a chapter, never chapter-to-chapter travel.
+ */
+
+.prototype {
+  /* Lateral truck (Brand Guide → Animation & Motion): adjacent-chapter move,
+     700–900ms, mechanical easing that never overshoots. Mid-band 800ms. */
+  --truck-duration: 800ms;
+  --truck-ease: cubic-bezier(0.45, 0.05, 0.55, 0.95);
+
+  /* Whip-pan: distant jump, 300–400ms, snappier. NOTE: keep --whip-duration in
+     lockstep with WHIP_MS in NavCandidateC.tsx (drives the blur-pulse timing). */
+  --whip-duration: 350ms;
+  --whip-ease: cubic-bezier(0.7, 0, 0.3, 1);
+  /* Brief motion blur during the whip; ramps over half the whip, then resolves. */
+  --whip-blur: 5px;
+  --whip-blur-ramp: 175ms;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Controls ------------------------------------------------------------------ */
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.index {
+  min-width: 0;
+}
+
+.indexList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  list-style: none;
+}
+
+/* Rough index links: buttons that read like the shipped ChapterIndex — the
+   current chapter marked in Sienna. Micro-UI hover only (Brand Guide 120–180ms);
+   the settled state carries no motion. */
+.indexLink {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-umber);
+  padding: var(--space-1) 0;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: var(--space-1);
+  transition: text-decoration-color 150ms ease-out;
+}
+
+.indexLink:hover {
+  text-decoration-color: var(--color-sienna);
+}
+
+.indexLink[data-current] {
+  color: var(--color-sienna);
+  text-decoration-color: var(--color-sienna);
+}
+
+.prevNext {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Viewport & motion track --------------------------------------------------- */
+
+.viewport {
+  position: relative;
+  overflow: hidden;
+  /* A locked-off stage. vh (not px) keeps this token-compliant. */
+  height: 68vh;
+  outline: var(--frame-line-width) solid var(--color-rule);
+  outline-offset: calc(-1 * var(--frame-line-inset));
+  /* NOTE: deliberately NO touch-action / overscroll hijack here (unlike
+     candidate B). The horizontal axis is click/keyboard only, and the vertical
+     axis is native scroll inside each panel — nothing to hijack. */
+}
+
+/* The rail. translateX by whole viewports; --truck-i comes from React state.
+   The transition duration/easing is chosen by [data-transit]; the whip adds a
+   filter blur pulse driven by [data-blurring]. This is the only element that
+   moves horizontally — settled states are perfectly still. */
+.track {
+  --dur: var(--truck-duration);
+  --ease: var(--truck-ease);
+  display: flex;
+  height: 100%;
+  transform: translateX(calc(var(--truck-i, 0) * -100%));
+  filter: blur(0);
+  transition:
+    transform var(--dur) var(--ease),
+    filter var(--whip-blur-ramp) linear;
+  will-change: transform, filter;
+}
+
+/* Distant jump → whip-pan timing/easing. */
+.track[data-transit="whip"] {
+  --dur: var(--whip-duration);
+  --ease: var(--whip-ease);
+}
+
+/* The whip blur pulse: JS holds this for half the whip, then releases it, so the
+   filter ramps 0 → blur → 0 as the pan travels and settles. */
+.track[data-blurring] {
+  filter: blur(var(--whip-blur));
+}
+
+/* Each panel is its own NATIVE vertical scroll context — this is the hybrid's
+   vertical axis. Horizontal is clipped so the panel never scrolls sideways. */
+.panel {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Faint per-chapter washes so a move reads as travel between distinct rooms.
+   color-mix keeps every value token-derived — no literal inks. Stays light so
+   Umber type keeps its contrast. */
+.panel[data-chapter="about"] {
+  background: color-mix(in srgb, var(--color-paper) 92%, var(--color-sienna));
+}
+
+.panel[data-chapter="experience"] {
+  background: color-mix(in srgb, var(--color-paper) 92%, var(--color-teal));
+}
+
+.panel[data-chapter="projects"] {
+  background: color-mix(in srgb, var(--color-paper) 90%, var(--color-mustard));
+}
+
+.panel[data-chapter="contact"] {
+  background: color-mix(in srgb, var(--color-paper) 92%, var(--color-sepia));
+}
+
+/* The scrollable column of chapter content. Taller than the viewport by design,
+   so the vertical axis actually has somewhere to travel. */
+.panelInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-8);
+}
+
+.kicker {
+  color: var(--color-sepia);
+}
+
+.title {
+  color: var(--color-umber);
+}
+
+.scrollHint {
+  color: var(--color-umber);
+  max-width: var(--measure-prose);
+  text-align: center;
+}
+
+/* Gray-box tableau bodies — empty Plate placeholders stand in for real chapter
+   content (none authored yet). Stacked so the chapter overflows the stage. */
+.tableau {
+  width: min(72ch, 100%);
+  min-height: 32vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Visually-hidden status line (aria-live announces the settled chapter). */
+.srStatus {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* prefers-reduced-motion: both truck and whip become straight cuts — instant, no
+   travel, no blur (Brand Guide hard rule; content parity preserved). Native
+   within-chapter scroll is unaffected. The blur pulse is also suppressed in JS. */
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    transition: none;
+    filter: none;
+  }
+
+  .indexLink {
+    transition: none;
+  }
+}

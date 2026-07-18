@@ -1,0 +1,39 @@
+/*
+ * Layout for the PORT-15 candidate-C spike surface. A demo stage, not a site
+ * chapter — token-only, mirrors the /dev gallery gutters so it reads familiar.
+ */
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-6);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: var(--measure-prose);
+}
+
+.kicker {
+  color: var(--color-sepia);
+}
+
+.lede {
+  color: var(--color-umber);
+}
+
+.keys {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.keys kbd {
+  padding: 0 var(--space-1);
+  border: 1px solid var(--color-rule);
+  background: var(--color-plate);
+}
