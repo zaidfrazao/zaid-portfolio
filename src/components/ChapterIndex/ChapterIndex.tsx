@@ -62,8 +62,12 @@ export function ChapterIndex({
   const classes = [styles.nav, className].filter(Boolean).join(" ");
 
   return (
-    <nav {...rest} aria-label="Chapters" className={classes}>
-      <ul className={styles.list}>
+    // `aria-label` is a default before the spread so a caller can override it —
+    // two chapter indexes on one page (e.g. header + footer) need distinct
+    // landmark names. `role="list"` is restated because WebKit drops list
+    // semantics from a `list-style: none` <ul> (Safari/VoiceOver).
+    <nav aria-label="Chapters" {...rest} className={classes}>
+      <ul className={styles.list} role="list">
         {chapters.map((chapter) => {
           const isCurrent = chapter.id === current;
           return (

@@ -23,6 +23,19 @@ describe("ChapterIndex — landmark & chapters", () => {
     ).toBeInTheDocument();
   });
 
+  it("lets a caller override the landmark name", () => {
+    render(<ChapterIndex aria-label="Footer chapters" />);
+    expect(
+      screen.getByRole("navigation", { name: "Footer chapters" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Chapters" })).toBeNull();
+  });
+
+  it("keeps list semantics on the chapter list (role='list' survives list-style:none)", () => {
+    render(<ChapterIndex />);
+    expect(screen.getByRole("list")).toBeInTheDocument();
+  });
+
   it("renders all four canonical chapters as links, in order", () => {
     render(<ChapterIndex />);
     const links = screen.getAllByRole("link");
