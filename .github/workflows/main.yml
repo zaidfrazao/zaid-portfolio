@@ -1,0 +1,17 @@
+name: Main
+
+# Merge to main runs the full pipeline with the complete browser matrix
+# (adds Firefox + WebKit), per docs/TESTING_STRATEGY.md (When Tests Run).
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: main-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/ci-pipeline.yml
+    with:
+      full_browser_matrix: true

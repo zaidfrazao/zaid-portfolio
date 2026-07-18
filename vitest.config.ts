@@ -27,9 +27,12 @@ export default defineConfig({
         // Root layout is exercised end-to-end (Playwright), not in unit tests.
         "src/app/layout.tsx",
       ],
-      // 70% floor per the Testing Strategy. Enforcement is wired here but left
-      // soft locally; the CI task flips `thresholds` on to fail the build.
-      // thresholds: { lines: 70, branches: 70, functions: 70, statements: 70 },
+      // 70% floor per the Testing Strategy. Kept soft locally so a quick
+      // `test:coverage` doesn't fail mid-development; hard in CI (PORT-4), where
+      // `CI` is always set, so a PR below the floor fails the build.
+      thresholds: process.env.CI
+        ? { lines: 70, branches: 70, functions: 70, statements: 70 }
+        : undefined,
     },
   },
 });
