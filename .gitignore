@@ -1,19 +1,43 @@
+# dependencies
 node_modules/
+.pnp
+.pnp.*
+
+# builds
 dist/
 build/
-.next/
+/.next/
+/out/
+*.tsbuildinfo
+next-env.d.ts
+
+# testing
+coverage/
+
+# env files
 .env
 .env.local
 .env.*.local
+
+# editors
 .idea/
 .vscode/
 *.swp
 *.swo
+
+# os
 .DS_Store
 Thumbs.db
+
+# logs
 *.log
 npm-debug.log*
-coverage/
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# vercel
+.vercel
 
 # Claude Code artifacts
 .playwright-mcp/

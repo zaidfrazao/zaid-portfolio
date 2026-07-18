@@ -9,6 +9,7 @@ This file provides guidance to Claude Code when working with this project.
 ## Project Documentation
 
 Key project documents are stored in the `docs/` folder:
+
 - `docs/PRD.md` - Product requirements document
 - `docs/BRAND_GUIDE.md` - Brand and UX guidelines
 - `docs/TESTING_STRATEGY.md` - Testing approach and strategy
@@ -16,6 +17,7 @@ Key project documents are stored in the `docs/` folder:
 ## Configuration
 
 Project settings are in `.claude/project.yaml`. This includes:
+
 - Build commands and tooling
 - Git branch conventions
 - Lakar workflow statuses
@@ -24,6 +26,7 @@ Project settings are in `.claude/project.yaml`. This includes:
 ## Slash Commands
 
 ### Project Setup (`/fra:` commands)
+
 - `/fra:status` - Check project setup progress
 - `/fra:prd` - Define product requirements
 - `/fra:brand` - Define brand and UX guidelines
@@ -32,6 +35,7 @@ Project settings are in `.claude/project.yaml`. This includes:
 - `/fra:save` - Commit and push changes
 
 ### Development (`/zao:` commands) — branch + PR workflow
+
 - `/zao:workflow` - View the development workflow
 - `/zao:begin-task TSK-XXX` - Start working on a task (creates a branch)
 - `/zao:implement-task` - Build the planned task

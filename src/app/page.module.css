@@ -1,0 +1,41 @@
+/*
+ * Placeholder landing. A centered, symmetric tableau — a deliberate nod to the
+ * planimetric grammar (PRD Design Thesis) without pre-empting the real design
+ * work in the Foundation & Design System tasks. No animation, no ambient
+ * motion: the resting state is fully static by brand rule.
+ */
+
+.stage {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.frame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-ink) 55%, transparent);
+}
+
+.name {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.positioning {
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  color: color-mix(in srgb, var(--color-ink) 75%, transparent);
+}
