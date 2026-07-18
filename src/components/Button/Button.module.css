@@ -1,0 +1,92 @@
+/*
+ * Button chrome — the four variants and their restrained states.
+ *
+ * Spec: docs/BRAND_GUIDE.md → Component Patterns → Buttons. Every color, space,
+ * and border weight is drawn from the design-token custom properties in
+ * globals.css (single-sourced in src/styles/*.ts) — no literal hex or px here.
+ * Typography is NOT set here: consumers compose the global `.register-label`
+ * utility so the Label register stays single-sourced (src/styles/typography.ts).
+ *
+ * Hard rules honored: rectangular (global radius 0), flat (no box-shadow, no
+ * transform on any state), restrained hover (slight darkening + underline within
+ * the 120–180ms Micro-UI band). Focus is a 2px Teal outline at 2px offset.
+ */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+
+  /* Underline is present but transparent at rest, then fades to visible on
+     hover — a color transition is animatable where `text-decoration` shorthand
+     is not. Variants that read as links at rest (tertiary) re-reveal it below. */
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.25em;
+
+  /* Micro UI (hover/focus): 150ms sits inside the Brand Guide's 120–180ms band,
+     ease-out. Only darkening + underline animate — never position or size. */
+  transition:
+    filter 150ms ease-out,
+    text-decoration-color 150ms ease-out;
+}
+
+/* Slight darkening + underline reveal. No lift, no scale, no shadow. */
+.button:hover {
+  filter: brightness(0.92);
+  text-decoration-color: currentColor;
+}
+
+/* Visible keyboard focus — 2px Teal outline, 2px offset (Brand Guide → A11y). */
+.button:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 2px;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Primary — Sienna fill, Paper label, generous horizontal padding. */
+.primary {
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--color-sienna);
+  color: var(--color-paper);
+}
+
+/* Secondary — 1.5px Teal outline (a border, so focus outline stays distinct),
+   Teal label, transparent fill. Border-box keeps its height equal to primary. */
+.secondary {
+  padding: var(--space-2) var(--space-4);
+  border: var(--frame-line-width) solid var(--color-teal);
+  background-color: transparent;
+  color: var(--color-teal);
+}
+
+/* Tertiary / ghost — Umber label, underline shown at rest (offset), no fill.
+   Tighter padding: an inline, low-emphasis action. */
+.tertiary {
+  padding: var(--space-1) var(--space-2);
+  background-color: transparent;
+  color: var(--color-umber);
+  text-decoration-color: currentColor;
+}
+
+/* Destructive — Error fill, Paper label. Included for completeness. */
+.destructive {
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--color-error);
+  color: var(--color-paper);
+}
+
+/* prefers-reduced-motion: straight cut — no camera moves, no state easing. */
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+}
