@@ -1,0 +1,34 @@
+name: Update visual baselines (manual)
+
+# TEMPORARY, removed in the same commit that lands the regenerated baselines.
+# Playwright visual baselines must be generated in the same environment CI runs
+# in (the pinned container + its font renderer), not on a dev machine. Run this
+# once via the Actions tab / `gh workflow run`, download the `updated-baselines`
+# artifact, commit it, and delete this file.
+on:
+  workflow_dispatch:
+
+jobs:
+  update:
+    name: Regenerate baselines
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.61.1-noble
+    env:
+      # Generate all four projects (Chromium, mobile, Firefox, WebKit) so the
+      # merge-to-main matrix has baselines too.
+      PW_ALL_BROWSERS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npx playwright test --update-snapshots
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: updated-baselines
+          path: e2e/__screenshots__/
+          retention-days: 1
