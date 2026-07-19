@@ -128,9 +128,7 @@ export function NavCandidateC() {
   // exit only — a chapter-move cut keeps focus on the nav control that caused
   // it).
   const depthRef = useRef<Depth>("tableau");
-  const enterButtonRef = useRef<HTMLButtonElement | HTMLAnchorElement | null>(
-    null,
-  );
+  const enterButtonRef = useRef<HTMLButtonElement | null>(null);
   const returnFocusRef = useRef(false);
   const manualReducedRef = useRef(false);
 
@@ -432,18 +430,33 @@ export function NavCandidateC() {
                   </h2>
                   {Tableau ? <Tableau /> : null}
                   {isProjects ? (
-                    // PORT-19: the explicit entry into depth (progressive
-                    // disclosure — push-in on explicit entry, never a novel
-                    // mechanic). Harness-owned chrome below the tableau for the
-                    // spike; production wants the affordance on the CatalogIQ
-                    // plate itself (see the notes doc).
-                    <Button
+                    // PORT-19: the explicit entry into depth — a harness-owned
+                    // "doorway plate". This is where the zoom finally lives
+                    // (walkthrough direction): HOVER push-in as camera
+                    // interest — the plate leans in slightly and REVEALS more
+                    // info (what's inside the case study). Hover leans toward
+                    // the doorway; click cuts through it. The reveal text is
+                    // always in the DOM (content parity for SRs; keyboard gets
+                    // it via :focus-visible). Production wants this treatment
+                    // on the CatalogIQ plate itself (see the notes doc).
+                    <button
+                      type="button"
                       ref={enterButtonRef}
-                      variant="secondary"
+                      className={styles.entryPlate}
                       onClick={enterCase}
                     >
-                      Enter the case study →
-                    </Button>
+                      <span className="register-label">
+                        Enter the case study →
+                      </span>
+                      <span className={styles.entryReveal}>
+                        <span
+                          className={`register-caption ${styles.entryRevealLine}`}
+                        >
+                          Inside: the problem, the build, the numbers —
+                          Figs. I–III.
+                        </span>
+                      </span>
+                    </button>
                   ) : null}
                 </div>
               </section>

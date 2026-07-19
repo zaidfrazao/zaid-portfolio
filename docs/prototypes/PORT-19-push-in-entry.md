@@ -40,17 +40,26 @@ Two independent reasons, one per rejected pass:
    text especially is zooming toward nothing: no detail is revealed that
    wasn't already legible.
 
-**The zoom idea is reserved for a future non-transition use.** Where it could
-be honest: pushing into a *photograph or dense artifact* that actually holds
-detail at higher scale — e.g. the insert's interactive specimens (PORT-18
-production direction: clickable sample photos opening a gallery). Zooming into
-a photo reveals real detail the way a camera move does; zooming into a layout
-does not. That exploration is its own task, not this one.
+**Where the zoom landed (walkthrough direction, same day): HOVER PUSH-IN AS
+CAMERA INTEREST.** The push-in becomes a hover effect, specifically *when the
+hover reveals more info*: an element with more to show leans in slightly
+(scale 1.03, 300ms, mechanical ease, no overshoot) and the extra information
+reveals with it. The reveal is the point — the lean without new information
+would be decoration. It pairs with the cut: **hover leans toward the doorway;
+click cuts through it.** Prototyped rough in the harness as the entry
+"doorway plate" (label + revealed contents line); the reveal text stays in
+the DOM at rest (content parity for SRs), keyboard gets it via
+`:focus-visible`, and reduced motion keeps the reveal (instant) but drops the
+lean entirely — a travel-less 1.03 jump is noise. A further candidate use:
+pushing into a real photograph (insert specimen → gallery, per the PORT-18
+production direction) — detail-revealing, so the same "zoom must reveal"
+rule holds.
 
-**Brand Guide impact:** the motion table row "Push-in · 900–1200ms · Entering
-a project/case study" is now contradicted by the walkthrough. The vocabulary
-needs a `/fra:update-brand` pass: depth entry becomes a cut; push-in either
-leaves the table or is re-scoped to in-artifact emphasis.
+**Brand Guide impact (two rows now):** the motion table row "Push-in ·
+900–1200ms · Entering a project/case study" is contradicted (depth entry is a
+cut), and the hover rule "no lift, no scale" is amended by the doorway
+treatment (scale allowed specifically when hover reveals more info, at a
+slower-than-micro-UI tempo). Both need a `/fra:update-brand` pass.
 
 ## What entry actually is: a match cut on the object
 
@@ -85,11 +94,12 @@ state, no timers. The general engine lesson stands from the v2 build:
 
 ## Interaction rules chosen (and the open questions)
 
-- **Entry is explicit** (progressive disclosure): a button,
-  keyboard-reachable. For the spike it is harness-owned chrome below the
-  tableau; **production wants the affordance on the CatalogIQ plate itself**
-  (the plate as the doorway) — which also makes the match cut literal: you
-  click the insert stub, you land on the insert.
+- **Entry is explicit** (progressive disclosure): the doorway plate — a
+  keyboard-reachable button that leans in and reveals its contents on
+  hover/focus. For the spike it is harness-owned chrome below the tableau;
+  **production wants the treatment on the CatalogIQ plate itself** (the plate
+  as the doorway) — which also makes the match cut literal: you hover the
+  insert stub and it leans in, you click, you land on the insert.
 - **Exit:** "← Back to Projects" + Esc, the mirror cut.
 - **Chapter travel while deep cuts depth closed first**, then runs the
   truck/whip. *Open rhythm question:* cut (chosen — the chapter index stays a
@@ -152,10 +162,13 @@ the production dev gallery.*
 - **The bare cut is undressed.** v3 is a hard cut with no staging. If the
   walkthrough finds it too abrupt, the candidate dressing is the intertitle
   treatment (a brief held plate, like chapter entries) — *not* motion.
-- **The zoom's future home is unproven.** "Reserved for non-transition use"
-  is a hypothesis; pushing into a real photograph (insert specimen → gallery)
-  is the first candidate to test, once real CatalogIQ imagery exists
-  (PORT-18 production direction).
+- **The hover-lean values are felt, not measured** — 1.03 / 300ms are first
+  guesses; the lean must read as interest, not a bounce-adjacent card
+  hover (the thing the Brand Guide's "no scale" rule was defending against).
+  The rule that keeps it honest: no lean without a reveal.
+- **Hover doesn't exist on touch** — the doorway plate's reveal needs a
+  mobile answer (always-revealed contents line, or reveal on first tap);
+  unexamined here.
 - **Mobile is untested**; the cut itself is axis-free so should survive, but
   the 68vh stage and the set's density at 360px are unexamined.
 - **The set's content is stub-grade** — real case-study structure is Phase-4;
