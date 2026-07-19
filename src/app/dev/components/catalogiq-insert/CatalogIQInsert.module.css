@@ -1,0 +1,119 @@
+/*
+ * CatalogIQ knolled insert (PORT-18) — token-only, flat, static-at-rest.
+ *
+ *   - Knolling (Brand Guide → Spacing & Layout): every band is a strict grid
+ *     sharing ONE gutter token (--space-2), items axis-aligned and centred, so
+ *     the whole reads as objects laid on a tray from directly above.
+ *   - No shadows, sharp corners, no transitions (Hard Rules 1–2). The tray edge
+ *     is the Plate frame-line (the "proscenium"), not simulated depth.
+ *   - Ink and spacing are tokens only; bespoke art/measure literals (svg widths,
+ *     ch caps) follow the tableaux.module.css precedent.
+ *
+ * Authored mobile-first: each band collapses to a single column; the knolled
+ * multi-column grids live in the 768px media block.
+ */
+
+.insert {
+  margin: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The tray holds the flat-lay; the shared gutter between bands equals the
+   in-band gutter so the whole grid reads as one rhythm. */
+.tray {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+}
+
+/* A specimen: the artifact over its museum-tag label, centred. */
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.itemLabel {
+  color: var(--color-sepia);
+  text-align: center;
+}
+
+/* ── Band 1 — pipeline screens ─────────────────────────────────────────── */
+
+.stages {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+}
+
+.screen {
+  width: 100%;
+  height: auto;
+}
+
+/* ── Band 2 — the connective diagram ───────────────────────────────────── */
+
+.pipeline {
+  width: min(100%, 30rem);
+  height: auto;
+}
+
+/* ── Band 3 — the stack chips ──────────────────────────────────────────── */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+/* ── Band 4 — the numbers ──────────────────────────────────────────────── */
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: 1px solid var(--color-rule);
+}
+
+.statValue {
+  color: var(--color-umber);
+}
+
+/* The unverified-figure marker rides small and quiet in Sienna. */
+.dagger {
+  color: var(--color-sienna);
+}
+
+.footnote {
+  max-width: 52ch;
+  margin-inline: auto;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  /* Five screen specimens across — the odd count keeps the band symmetric
+     about the centreline (Brand Guide → Grid discipline). */
+  .stages {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

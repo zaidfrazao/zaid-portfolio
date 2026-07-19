@@ -1,0 +1,39 @@
+/*
+ * Layout for the CatalogIQ knolled-insert gallery (PORT-18). A capture/judging
+ * surface, not part of the site's navigation. Token-only spacing; the two
+ * framings stack so each can be judged full-width on both viewports.
+ */
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+}
+
+.note {
+  color: var(--color-sepia);
+}
+
+.cases {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.case {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+}
+
+.caseLabel {
+  color: var(--color-sepia);
+}
+
+/* The "on a plate ground" framing: the insert dropped onto a Plate surface, as
+   a Projects tableau would host it. Generous padding so the tray breathes. */
+.ground {
+  padding: var(--space-6);
+}
