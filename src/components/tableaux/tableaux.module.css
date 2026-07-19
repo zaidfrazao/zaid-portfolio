@@ -1,0 +1,173 @@
+/*
+ * Rough chapter tableaux (PORT-16) — shared styles for the four chapter scenes
+ * (About / Experience / Projects / Contact). Spike-grade but on-grammar:
+ *
+ *   - Token-only: every value derives from the design tokens mirrored in
+ *     globals.css (--color-*, --space-*, --measure-prose, --radius-medallion).
+ *     No literal inks, no literal spacing off the 8px grid.
+ *   - Static at rest (Brand Guide Hard Rule 2): no animation, no transition on
+ *     any settled element. The only motion on the page is the harness's
+ *     chapter-to-chapter camera move.
+ *   - Symmetric about the vertical centerline (Hard Rule 5): centered columns,
+ *     auto side margins, mirrored project grid.
+ *
+ * Authored mobile-first; the desktop project grid lives in the media block.
+ */
+
+/* Every tableau is a full-width, centered, vertical stack. */
+.tableau {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* A centered, measure-capped intro line under a chapter's heading. */
+.lede {
+  max-width: var(--measure-prose);
+  margin-inline: auto;
+  text-align: center;
+  color: var(--color-umber);
+}
+
+/* ── About ─────────────────────────────────────────────────────────────── */
+
+.medallion {
+  width: min(160px, 44vw);
+  height: auto;
+}
+
+.name {
+  text-align: center;
+}
+
+/* The positioning line — the 10-second-path tagline, staged in Sienna. */
+.positioning {
+  text-align: center;
+  color: var(--color-sienna);
+}
+
+/* First-person bio prose: left-aligned reading column, centered on the axis. */
+.bio {
+  max-width: var(--measure-prose);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  text-align: left;
+}
+
+/* ── Experience ────────────────────────────────────────────────────────── */
+
+.timeline {
+  width: 100%;
+  max-width: 40rem;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  list-style: none;
+}
+
+.role {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  text-align: center;
+}
+
+.dates {
+  color: var(--color-sepia);
+  letter-spacing: 0.08em;
+}
+
+.roleTitle {
+  color: var(--color-sienna);
+}
+
+.roleLine {
+  max-width: 52ch;
+  margin-inline: auto;
+}
+
+/* ── Projects ──────────────────────────────────────────────────────────── */
+
+.projects {
+  width: 100%;
+  max-width: 52rem;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* The two supporting projects sit in a mirrored row on desktop, stacked on
+   mobile. The anchor (CatalogIQ) spans full width above them. */
+.projectRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+.project {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.insert {
+  width: min(240px, 80%);
+  height: auto;
+}
+
+.projectLine {
+  max-width: 46ch;
+  margin-inline: auto;
+}
+
+/* Stack chips — the functional register, centered under each project. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+/* ── Contact ───────────────────────────────────────────────────────────── */
+
+.contact {
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.availability {
+  text-align: center;
+  color: var(--color-umber);
+}
+
+/* Primary action + resume, side by side, centered. One primary per tableau. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.socials {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+@media (min-width: 768px) {
+  .projectRow {
+    grid-template-columns: 1fr 1fr;
+  }
+}
