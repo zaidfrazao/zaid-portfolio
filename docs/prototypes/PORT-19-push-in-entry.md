@@ -1,176 +1,166 @@
 # PORT-19 — Rough push-in entry from the Projects chapter
 
 **Spike deliverable.** The code (`CaseStudy.tsx`, `CaseStudy.module.css`, and
-the PORT-19 additions to `NavCandidateC.tsx` / `NavCandidateC.module.css` under
+the PORT-19 additions to `NavCandidateC.tsx` under
 `src/app/dev/prototypes/nav-candidate-c/`) is throwaway; *these notes* — what
-the production transition engine needs from the push-in — are what carries
-forward. The task: enter the CatalogIQ case study from the Projects tableau via
-the Brand Guide push-in (900–1200ms, `cubic-bezier(0.25, 0.1, 0.25, 1)`, no
-overshoot, "entering a project/case study"), and back out again.
+the walkthrough decided about the push-in and what the production transition
+engine needs — are what carries forward. The task as written: enter the
+CatalogIQ case study from the Projects tableau via the Brand Guide push-in
+(900–1200ms, `cubic-bezier(0.25, 0.1, 0.25, 1)`), and back out again.
+
+**The spike's outcome is a rejection of its own premise** — that is the
+finding. Three passes were built and judged (2026-07-19):
+
+- **v1 — zoom-crossfade:** the tableau scaled up and faded while the set
+  scaled up beneath it. *Rejected:* reads as a transition effect (slideware),
+  not camera grammar. A push-in emphasizes something in a scene; it is not a
+  scene change.
+- **v2 — push-then-cut:** the tableau dollied toward the plate (scale only,
+  nothing fading), then a straight cut to the set. *Rejected:* "zoom on
+  nothing" — zooming for its own sake. A dolly on flat DOM has no depth cues
+  (no parallax, no focus pull, no revealed detail), so even a well-aimed,
+  well-timed scale reads as page magnification, not camera travel.
+- **v3 — straight cut (shipped in the spike):** entry and exit are cuts; the
+  film grammar lives in *what the cut lands on* (below).
 
 - **Route:** `/dev/prototypes/nav-candidate-c` (noindex; run `npm run dev`),
   Projects chapter → "Enter the case study →". Coverage-excluded
   (`src/app/dev/**`), like every prior spike.
-- **Verified in-browser:** computed transition
-  `transform 1s cubic-bezier(0.25, 0.1, 0.25, 1)`; nothing fades during the
-  push; the cut lands on the insert; enter/exit/Esc/instant-cut/chapter-nav
-  behave as below.
 
-## The headline finding: zoom is not a transition
+## The headline finding: zoom is not a transition — at all
 
-The first pass built the move as a **zoom-crossfade**: the Projects panel
-scaled up and faded out while the case-study set scaled up from 0.92 and faded
-in — two layers, one camera, dissolving into each other mid-zoom. Mechanically
-clean, and **rejected at the walkthrough (2026-07-19)**: Zaid read it as a
-transition *effect*, not camera grammar. The diagnosis: **a push-in is an
-emphasis move.** The camera is already in a scene and dollies toward a subject
-to say "look at this." It is used on entry *of* a scene to emphasise
-something — it is not the scene change itself. Scaling one scene into another
-reads as a zoom transition (a slideware device), no matter how disciplined the
-easing.
+Two independent reasons, one per rejected pass:
 
-**The rule that carries forward: the zoom emphasizes; the cut transitions.**
-Film grammar separates the two — dolly toward the doorway, *cut* to the next
-room — and the recomposed move does the same:
+1. **Grammar:** a push-in is an emphasis move *within* a scene. Scene changes
+   are cuts. Gluing the two together ("push as the doorway") still subordinates
+   the zoom to a transition, and it dies there.
+2. **Medium:** a browser "dolly" is a transform on a flat surface. Real
+   camera moves read because space has depth — parallax, focus, occlusion. A
+   scaled DOM has none, so the eye reports *magnification*. Zooming toward
+   text especially is zooming toward nothing: no detail is revealed that
+   wasn't already legible.
 
-- **The push (in-scene emphasis):** the Projects panel dollies toward the
-  anchor-plate region — `scale 1 → 1.7` over the full 1000ms, **nothing
-  fades**, no other layer visible. The scene stays itself; the camera simply
-  commits to the plate.
-- **The cut (the scene change):** when the push lands, a straight cut — the
-  case-study set mounts over the held frame, already settled (opaque, scale 1,
-  no transition of its own). The set opens **on the insert**, so the cut is a
-  *match cut on the object* the camera was pushing toward: plate → flat-lay,
-  the "overhead insert opens into the case study" pattern made literal.
-- **The exit mirrors:** cut back (the set unmounts, revealing the tableau
-  still holding its pushed-in frame), then the panel settles `1.7 → 1` over
-  the same move — the emphasis releasing.
+**The zoom idea is reserved for a future non-transition use.** Where it could
+be honest: pushing into a *photograph or dense artifact* that actually holds
+detail at higher scale — e.g. the insert's interactive specimens (PORT-18
+production direction: clickable sample photos opening a gallery). Zooming into
+a photo reveals real detail the way a camera move does; zooming into a layout
+does not. That exploration is its own task, not this one.
 
-One consequence worth keeping: **the incoming layer needs no animation at
-all.** All motion lives on the outgoing scene; the destination just *is* —
-which is also what keeps it feeling like a place rather than a presented
+**Brand Guide impact:** the motion table row "Push-in · 900–1200ms · Entering
+a project/case study" is now contradicted by the walkthrough. The vocabulary
+needs a `/fra:update-brand` pass: depth entry becomes a cut; push-in either
+leaves the table or is re-scoped to in-artifact emphasis.
+
+## What entry actually is: a match cut on the object
+
+The film grammar that *survived* the walkthrough is in the destination, not
+the travel. Entry is a straight cut, and the set opens **on the insert** — the
+tableau's plate holds the insert stub, the cut lands on the real knolled
+flat-lay filling the frame: a cut to close-up on the same object. Exit is the
+mirror cut back to the tableau. The incoming layer never animates; the
+destination just *is* — which is also what keeps it a place, not a presented
 surface.
+
+Practical corollary found in-browser: the set's focus target (the heading)
+sits below the insert, and programmatic focus **must use
+`focus({ preventScroll: true })`** or the default scroll-into-view drags the
+set past the match-cut object. The engine owns this rule: focus never re-aims
+a landed frame.
 
 ## The state model: depth is an axis, not a page
 
-Depth composes with chapter travel as a second orthogonal axis. The harness
-holds `(chapterIndex, transit)` × `depth`, where
-`depth: "tableau" | "pushing" | "case"`:
+Depth composes with chapter travel as a second orthogonal axis. With both
+directions cuts, it collapses to `depth: "tableau" | "case"` — no in-flight
+state, no timers. The general engine lesson stands from the v2 build:
 
-- `tableau → pushing` on explicit entry; a `PUSH_MS` timer fires the cut
-  (`pushing → case`). Esc during `pushing` cancels the timer and the camera
-  backs out from wherever it was — **the cut never happens if the push was
-  abandoned.**
-- `case → tableau` is the exit cut; the CSS settle-out runs from the held
-  scale with no JS timer (the transition animates from the current computed
-  value when `[data-depth]` drops).
+- Model moves as `(from, to, move)` with the vocabulary (truck, whip, cut) as
+  data — branch on *what kind of edge* is traversed, as the distance branch
+  already does for truck/whip.
+- v2's push-then-cut showed a move can be a *sequence* (two phases, one
+  intention). If a multi-phase move ever earns its place, the engine wants a
+  small timeline, not more CSS transition properties.
 - Mount-fresh-per-entry means the set always opens at its head — on the
   insert — with no scroll-reset logic.
-- The production engine should model moves as `(from, to, move)` with truck,
-  whip, and push-then-cut as vocabulary entries — branch on *what kind of
-  edge* is traversed (adjacent chapter / distant chapter / depth), exactly as
-  the distance branch already does for truck/whip. Multi-phase moves (push
-  **then** cut) mean a move is a *sequence*, not a single CSS transition —
-  the engine wants a small timeline, not more transition properties.
 
 ## Interaction rules chosen (and the open questions)
 
 - **Entry is explicit** (progressive disclosure): a button,
   keyboard-reachable. For the spike it is harness-owned chrome below the
   tableau; **production wants the affordance on the CatalogIQ plate itself**
-  (the plate as the doorway). That also mostly solves the aim problem below.
-- **Exit:** "← Back to Projects" + Esc. Cut back, then settle.
-- **Chapter travel while deep cuts depth closed instantly**, then runs the
-  truck/whip; the panel's settle-out runs beneath the departing frame. *Open
-  rhythm question:* cut (chosen — the chapter index stays a reliable
-  10-second path), pull back first (stately, ~2s), or block until explicit
-  exit.
+  (the plate as the doorway) — which also makes the match cut literal: you
+  click the insert stub, you land on the insert.
+- **Exit:** "← Back to Projects" + Esc, the mirror cut.
+- **Chapter travel while deep cuts depth closed first**, then runs the
+  truck/whip. *Open rhythm question:* cut (chosen — the chapter index stays a
+  reliable 10-second path) vs. block until explicit exit.
 - **The set is its own vertical scroll context** — inside, scroll walks the
   case study.
-- Entering mid-truck/whip is possible; harmless here, but the engine should
-  serialize moves — one camera, one move at a time.
-
-## The aim problem (the production finding)
-
-`transform-origin` is fixed at `50% 42%` of the viewport-sized panel box
-(scroll-independent — the transform sits on the scroll container, not the tall
-inner column). But the camera pushes toward whatever occupies that region:
-with the panel scrolled to the entry button, that's below the CatalogIQ plate.
-For the spike the read survives; for production, **the engine must aim the
-camera** — measure the anchor plate's on-screen rect at entry
-(`getBoundingClientRect`) and derive the origin (and possibly a small
-translate) from it. "Push toward the thing being entered" is part of the
-move's meaning. With the affordance on the plate itself, the plate is
-necessarily in frame when entry triggers.
 
 ## Layering & accessibility contract
 
 - **z-order (bottom→top):** track (chapter panels) → case-study set (`z: 1`)
   → intertitle plate (`z: 2`). Intertitles stay above depth.
 - **The track goes `inert` while `depth === "case"`** — the covered tableau
-  must not stay tabbable/readable. Released at the exit cut so the settling
-  tableau is immediately interactive.
-- **Focus follows the camera:** into the set's heading (`tabIndex={-1}`) at
-  the cut — with **`focus({ preventScroll: true })`**: the heading sits below
-  the insert, and the default scroll-into-view dragged the set past the
-  match-cut object (a real bug caught in-browser; the engine must own this
-  rule — programmatic focus must never re-aim the landed frame). Focus
-  returns to the entry trigger on explicit exit — *after* the re-render that
-  lifts `inert`; focusing inside a still-inert subtree fails silently. A
-  chapter-nav cut does not steal focus.
+  must not stay tabbable/readable. Released at the exit cut.
+- **Focus follows the cut:** into the set's heading (`tabIndex={-1}`,
+  `preventScroll`) on entry; back to the entry trigger on explicit exit —
+  *after* the re-render that lifts `inert` (focusing inside a still-inert
+  subtree fails silently). A chapter-nav cut does not steal focus.
 - The aria-live status line announces the depth state ("Case study:
   CatalogIQ, within chapter 3, Projects."); the set's ground is opaque Paper —
   the chapter wash disappearing is part of the "different room" read.
 
 ## Reduced motion
 
-- `prefers-reduced-motion` skips the push entirely — **straight to the cut**,
-  both ways (the destination was already a cut, so the fallback is the same
-  grammar minus the dolly; content parity is exact).
-- The AC's fallback demo is a harness chrome toggle ("Motion: full / instant
-  cut") forcing the same branch via `data-reduced`, so the walkthrough can
-  compare side by side without OS settings. Applies to truck and whip too. OS
-  wins over the toggle and the label says so. *Worth keeping in the
-  production dev gallery.*
+Depth entry/exit is already a cut, so it is identical under
+`prefers-reduced-motion` — the fallback and the design converged, which is a
+point in the cut's favor. The harness chrome toggle ("Motion: full / instant
+cut") remains for previewing the truck/whip cuts side by side without OS
+settings; OS wins over the toggle and the label says so. *Worth keeping in
+the production dev gallery.*
 
 ## Acceptance criteria — status
 
-- [x] **Push-in and reverse demonstrated** — push-then-cut in, cut-then-settle
-  out, via button/Esc.
-- [x] **Timing/easing within spec; reads as entering a set** — 1000ms,
-  `cubic-bezier(0.25, 0.1, 0.25, 1)`, verified computed. The v1
-  zoom-crossfade *failed* this criterion at the walkthrough and was
-  recomposed; the push-then-cut earns the read by keeping the zoom as
-  emphasis and letting the cut change the scene. Final judgment is Zaid's.
-- [x] **Instant-cut fallback shown** — real `prefers-reduced-motion` support
-  plus the preview toggle.
+- [x] **Push-in and reverse demonstrated** — built twice (v1 crossfade, v2
+  push-then-cut), judged, and rejected; the spike's demonstrations are what
+  produced the verdict.
+- [x] **Timing/easing within spec; reads as entering a set** — v1/v2 ran the
+  spec'd 1000ms `cubic-bezier(0.25, 0.1, 0.25, 1)` (verified computed) and
+  still failed the *reads-as* half. The shipped v3 earns the read with a
+  match cut on the insert instead of travel.
+- [x] **Instant-cut fallback shown** — the design converged with the
+  fallback: entry is a cut for everyone; the toggle still previews truck/whip
+  cuts.
 - [x] **Notes for the production transition engine** — this document.
 
 ## Implementation cost
 
-- **Low.** One non-animating set component + CSS, ~100 lines of depth wiring
-  in the harness, one scale transition beside the truck/whip rules. **Zero
-  changes to shipped code** (`src/components/**` untouched); the PORT-18
-  insert is imported dev→dev as the match-cut object. No new dependency. The
-  rejected v1 was *more* code (two-layer choreography, double-rAF mount
-  dance, offset fade ramps) — the corrected grammar simplified the build.
+- **Low, and it shrank with each verdict.** Final state: one non-animating
+  set component + CSS, ~60 lines of depth wiring, zero transition CSS for
+  depth. **Zero changes to shipped code** (`src/components/**` untouched);
+  the PORT-18 insert is imported dev→dev as the match-cut object. Each
+  rejected pass was *more* code than its replacement — the corrected grammar
+  kept simplifying the build.
 - **No automated tests** (spike; coverage-excluded). On promotion the depth
-  machine wants real tests: enter/cut timing, Esc-mid-push abandon,
-  focus round-trip (incl. preventScroll), chapter-nav cut, reduced-motion
-  branches — all assertable without judging feel.
+  machine wants real tests: enter/exit cuts, focus round-trip (incl.
+  preventScroll), chapter-nav cut, inert release — all assertable without
+  judging feel.
 
 ## Risks / notes
 
-- **The feel is judged, not measured** — scale 1.7, the 42% origin, and the
-  1000ms push are felt values; the walkthrough may retune. The hard cut
-  itself is the biggest bet: it should feel like film punctuation, not a
-  glitch — if it reads abrupt, the candidate fix is a 2–3 frame hold at full
-  push before the cut, *not* a fade.
-- **Mobile is untested**; whether the push reads at 360px (and what it does
-  to the fixed 68vh stage) is unexamined.
+- **The bare cut is undressed.** v3 is a hard cut with no staging. If the
+  walkthrough finds it too abrupt, the candidate dressing is the intertitle
+  treatment (a brief held plate, like chapter entries) — *not* motion.
+- **The zoom's future home is unproven.** "Reserved for non-transition use"
+  is a hypothesis; pushing into a real photograph (insert specimen → gallery)
+  is the first candidate to test, once real CatalogIQ imagery exists
+  (PORT-18 production direction).
+- **Mobile is untested**; the cut itself is axis-free so should survive, but
+  the 68vh stage and the set's density at 360px are unexamined.
 - **The set's content is stub-grade** — real case-study structure is Phase-4;
   the pilot figures inside the imported insert stay flagged
   pending-verification (CONTENT_NOTES rule).
-- **WSL2 dev-server caveat** (tooling, not product): file-watcher misses
-  meant a running `next dev` served stale code during verification — restart
-  the dev server before judging motion changes in the walkthrough.
+- **WSL2 dev-server caveat** (tooling, not product): file-watcher misses mean
+  a running `next dev` can serve stale code — restart the dev server before
+  judging motion changes in a walkthrough.

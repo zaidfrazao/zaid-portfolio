@@ -27,15 +27,10 @@
   --whip-blur: 5px;
   --whip-blur-ramp: 175ms;
 
-  /* Push-in (PORT-19; Brand Guide → Animation & Motion): entering a case
-     study, 900–1200ms, mechanical, no overshoot. NOTE: keep --push-duration in
-     lockstep with PUSH_MS in CaseStudy.tsx (drives the push-then-cut timer).
-     The push is EMPHASIS within the scene — nothing fades; the scene change
-     is a straight cut when the push lands (see .panel below). */
-  --push-duration: 1000ms;
-  --push-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
-  /* How close the camera gets to the plate before the cut. */
-  --push-scale: 1.7;
+  /* NOTE (PORT-19): there are deliberately NO push/zoom properties here. The
+     walkthrough rejected zoom in any transition role — depth entry/exit is a
+     straight cut (see .panel and the notes doc); the zoom idea is reserved
+     for a future non-transition use. */
 
   display: flex;
   flex-direction: column;
@@ -138,28 +133,17 @@
 /* Each panel is its own NATIVE vertical scroll context — this is the hybrid's
    vertical axis. Horizontal is clipped so the panel never scrolls sideways.
 
-   PORT-19 adds the push-in: [data-depth="case"] dollies the panel toward the
-   anchor-plate region — scale only, NOTHING FADES. The push is emphasis
-   within the scene (walkthrough verdict: zoom is not a transition); the scene
-   change is a straight cut — the opaque set mounting over the held frame —
-   and the exit cut reveals this frame again before [data-depth] drops and the
-   panel settles 1.7 → 1 over the same move. The transform sits on the PANEL
-   (the viewport-sized scroll container), not the tall inner column, so the
-   origin is scroll-independent and stated against the visible box. 42% aims
-   at where the CatalogIQ plate sits on entry — a felt value, tuned at the
-   walkthrough. */
+   PORT-19: the panel does NOT transform for depth entry. Both zoom treatments
+   (crossfade, then push-then-cut) were rejected at the walkthrough — a dolly
+   on flat DOM reads as page magnification, not camera travel. Entering the
+   case study is a straight cut: the opaque set (CaseStudy.module.css) mounts
+   over this panel, and the exit cut unmounts it. */
 .panel {
   flex: 0 0 100%;
   width: 100%;
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  transform-origin: 50% 42%;
-  transition: transform var(--push-duration) var(--push-ease);
-}
-
-.panel[data-depth="case"] {
-  transform: scale(var(--push-scale));
 }
 
 /* Faint per-chapter washes so a move reads as travel between distinct rooms.
@@ -211,18 +195,14 @@
   border: 0;
 }
 
-/* prefers-reduced-motion: truck, whip, and push-in all become straight cuts —
-   instant, no travel, no blur (Brand Guide hard rule; content parity
-   preserved). Native within-chapter scroll is unaffected. The blur pulse is
-   also suppressed in JS. */
+/* prefers-reduced-motion: truck and whip become straight cuts — instant, no
+   travel, no blur (Brand Guide hard rule; content parity preserved). Depth
+   entry/exit is already a cut. Native within-chapter scroll is unaffected.
+   The blur pulse is also suppressed in JS. */
 @media (prefers-reduced-motion: reduce) {
   .track {
     transition: none;
     filter: none;
-  }
-
-  .panel {
-    transition: none;
   }
 
   .indexLink {
@@ -232,13 +212,8 @@
 
 /* The harness's manual instant-cut preview (PORT-19): the same cuts as the OS
    setting, toggled from the chrome so the walkthrough can compare full motion
-   and the fallback side by side. (The case-study set never animates — the cut
-   is already a cut — so only the push and the chapter moves collapse.) */
+   and the fallback side by side. */
 .prototype[data-reduced] .track {
   transition: none;
   filter: none;
-}
-
-.prototype[data-reduced] .panel {
-  transition: none;
 }

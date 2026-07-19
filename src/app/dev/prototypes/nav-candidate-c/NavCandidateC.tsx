@@ -14,7 +14,7 @@ import { CHAPTERS } from "@/components/ChapterIndex";
 import { TABLEAUX } from "@/components/tableaux";
 import { toRoman } from "@/lib/numerals";
 
-import { CaseStudy, PUSH_MS } from "./CaseStudy";
+import { CaseStudy } from "./CaseStudy";
 import { INTERTITLES, Intertitle } from "./Intertitle";
 import styles from "./NavCandidateC.module.css";
 
@@ -41,17 +41,15 @@ import styles from "./NavCandidateC.module.css";
  *
  * Since PORT-19 the harness also carries a DEPTH axis, orthogonal to chapter
  * travel: an explicit "Enter the case study" control on the Projects chapter
- * enters the CatalogIQ set (./CaseStudy) as PUSH-IN, THEN CUT — the camera
- * dollies toward the anchor plate within the scene (Brand Guide push-in,
- * 1000ms, no overshoot, pure emphasis: nothing fades), and the scene change
- * itself is a straight cut that lands on the insert. The exit mirrors: cut
- * back to the pushed-in tableau, which settles out over the same move. The
- * walkthrough rejected zoom-as-transition (v1's crossfade) — a push-in
- * emphasizes something in a scene; it is not a scene change. Esc / "Back to
- * Projects" exits; chapter travel while deep cuts the depth axis closed
- * (spike rule — the rhythm question is in
- * docs/prototypes/PORT-19-push-in-entry.md). A harness chrome toggle previews
- * the reduced-motion instant cut without OS settings.
+ * enters the CatalogIQ set (./CaseStudy) as a STRAIGHT CUT that lands on the
+ * insert (a match cut on the object), and Esc / "Back to Projects" cuts back.
+ * The walkthrough rejected zoom in ANY transition role: v1's zoom-crossfade
+ * read as a transition effect, and v2's push-then-cut still read as "zoom on
+ * nothing" — a dolly on flat DOM is magnification, not camera travel. The
+ * zoom idea is reserved for a future non-transition use; entry/exit are cuts
+ * (docs/prototypes/PORT-19-push-in-entry.md holds the verdicts). Chapter
+ * travel while deep cuts the depth axis closed first. A harness chrome toggle
+ * previews the reduced-motion instant cut (truck/whip) without OS settings.
  *
  * Throwaway quality by intent — docs/prototypes/PORT-15-candidate-c.md holds the
  * learnings and the comparative A/B/C notes. It composes the shipped leaves
@@ -72,15 +70,11 @@ const DISTANT = 2;
 type Transit = "truck" | "whip";
 
 /**
- * The depth axis (PORT-19), orthogonal to chapter travel:
- * - "tableau": at the chapter surface.
- * - "pushing": the camera is dollying toward the anchor plate (the panel
- *   scales via [data-depth]); the set is NOT yet visible. Ends in the cut.
- * - "case": inside the set — it mounted at the cut, already settled; the panel
- *   holds its pushed-in frame beneath the opaque set so the exit cut lands
- *   back on it before the pull-back settles.
+ * The depth axis (PORT-19), orthogonal to chapter travel: at the chapter
+ * surface, or inside the case-study set. Both directions are straight cuts,
+ * so there is no in-flight state.
  */
-type Depth = "tableau" | "pushing" | "case";
+type Depth = "tableau" | "case";
 
 // prefers-reduced-motion as an external store (render-time consumers: the
 // CaseStudy layer's focus timing and the motion-toggle label; reducedRef
@@ -105,7 +99,7 @@ export function NavCandidateC() {
   // The chapter id whose intertitle plate is currently held over the viewport
   // (PORT-17), or null when none is showing.
   const [intertitleId, setIntertitleId] = useState<string | null>(null);
-  // The depth axis (PORT-19): push-then-cut in, cut-then-settle out.
+  // The depth axis (PORT-19): a straight cut in, a straight cut out.
   const [depth, setDepth] = useState<Depth>("tableau");
   // Manual instant-cut preview (the AC's reduced-motion fallback demo) — ORed
   // with the OS prefers-reduced-motion setting everywhere motion branches.
@@ -130,11 +124,10 @@ export function NavCandidateC() {
   // not state: it must survive StrictMode's dev double-effect without a re-render.
   const seenRef = useRef<Set<string>>(new Set());
   // Depth-axis refs (PORT-19): the current depth for stable callbacks, the
-  // push-then-cut timer, the entry trigger for focus return, and whether that
-  // return is owed (explicit exit only — a chapter-move cut keeps focus on the
-  // nav control that caused it).
+  // entry trigger for focus return, and whether that return is owed (explicit
+  // exit only — a chapter-move cut keeps focus on the nav control that caused
+  // it).
   const depthRef = useRef<Depth>("tableau");
-  const caseTimerRef = useRef<number | null>(null);
   const enterButtonRef = useRef<HTMLButtonElement | HTMLAnchorElement | null>(
     null,
   );
@@ -158,60 +151,31 @@ export function NavCandidateC() {
     [],
   );
 
-  const clearCaseTimer = useCallback(() => {
-    if (caseTimerRef.current !== null) {
-      window.clearTimeout(caseTimerRef.current);
-      caseTimerRef.current = null;
-    }
-  }, []);
-
-  // Enter: PUSH, THEN CUT. The panel dollies toward the anchor plate for the
-  // full move (pure emphasis — nothing fades, the set is not visible yet), and
-  // the cut lands when the push completes: the set mounts already settled.
-  // Under reduced motion the push is skipped entirely — straight to the cut.
+  // Enter: a straight cut — the set mounts already settled, opening on the
+  // insert (the match cut). No motion, so reduced-motion needs no branch here.
   const enterCase = useCallback(() => {
     if (depthRef.current !== "tableau") return;
-    clearCaseTimer();
-    if (isReduced()) {
-      depthRef.current = "case";
-      setDepth("case");
-      return;
-    }
-    depthRef.current = "pushing";
-    setDepth("pushing");
-    caseTimerRef.current = window.setTimeout(() => {
-      // Only cut if the push is still in flight (Esc/chapter-nav may have
-      // already backed out; the timer is cleared there, but belt-and-braces).
-      if (depthRef.current === "pushing") {
-        depthRef.current = "case";
-        setDepth("case");
-      }
-    }, PUSH_MS);
-  }, [clearCaseTimer, isReduced]);
+    depthRef.current = "case";
+    setDepth("case");
+  }, []);
 
-  // Exit: CUT BACK, THEN SETTLE. Unmounting the set reveals the tableau still
-  // holding its pushed-in frame; dropping [data-depth] in the same render lets
-  // the panel settle 1.7 → 1 over the move (the CSS transition runs from the
-  // held value — no JS timer needed; under reduced motion it's instant).
-  // Focus returns to the entry trigger via the depth effect below — it can't
-  // be focused here, the track is still inert until the re-render.
+  // Exit: the mirror cut. Focus returns to the entry trigger via the depth
+  // effect below — it can't be focused here, the track is still inert until
+  // the re-render.
   const exitCase = useCallback(() => {
     if (depthRef.current === "tableau") return;
-    clearCaseTimer();
     depthRef.current = "tableau";
     setDepth("tableau");
     returnFocusRef.current = true;
-  }, [clearCaseTimer]);
+  }, []);
 
   const goTo = useCallback(
     (target: number) => {
       // Depth is orthogonal to chapter travel: any chapter move first cuts the
-      // depth axis closed, so the truck/whip starts from the tableau (the
-      // panel's settle-out runs beneath it as it slides off). Whether it
-      // should block instead is a rhythm question for the walkthrough; see the
-      // PORT-19 notes doc.
+      // depth axis closed, so the truck/whip starts from the tableau. Whether
+      // it should block instead is a rhythm question for the walkthrough; see
+      // the PORT-19 notes doc.
       if (depthRef.current !== "tableau") {
-        clearCaseTimer();
         depthRef.current = "tableau";
         setDepth("tableau");
       }
@@ -241,7 +205,7 @@ export function NavCandidateC() {
         setBlurring(false);
       }
     },
-    [clearBlurTimer, clearCaseTimer, isReduced, last],
+    [clearBlurTimer, isReduced, last],
   );
 
   // Keep the ref the stable callbacks read in sync with rendered state.
@@ -329,13 +293,8 @@ export function NavCandidateC() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [exitCase, goTo, last]);
 
-  // Clear pending blur/depth timers on unmount.
-  useEffect(() => {
-    return () => {
-      clearBlurTimer();
-      clearCaseTimer();
-    };
-  }, [clearBlurTimer, clearCaseTimer]);
+  // Clear a pending blur timer on unmount.
+  useEffect(() => clearBlurTimer, [clearBlurTimer]);
 
   const current = CHAPTERS[index];
   // The chapter the currently-held intertitle introduces (id → chapter), or
@@ -393,8 +352,9 @@ export function NavCandidateC() {
           </Button>
           {/* PORT-19: preview the reduced-motion instant cut without flipping
               OS settings — for the walkthrough's side-by-side judgment. Applies
-              to every move (push, truck, whip), like the real setting. When the
-              OS already asks for reduced motion, that wins and this reads so. */}
+              to the moving moves (truck, whip; depth is already a cut), like
+              the real setting. When the OS already asks for reduced motion,
+              that wins and this reads so. */}
           <Button
             variant="secondary"
             onClick={() => setManualReduced((value) => !value)}
@@ -438,7 +398,7 @@ export function NavCandidateC() {
 
         {/* inert while inside the set (PORT-19): the tableau beneath the
             opaque overlay must not stay tabbable/readable. Released at the
-            exit cut, so the tableau is interactive again as it settles out. */}
+            exit cut. */}
         <div
           className={styles.track}
           data-transit={transit}
@@ -457,13 +417,6 @@ export function NavCandidateC() {
                 }}
                 className={styles.panel}
                 data-chapter={chapter.id}
-                // The push-in (PORT-19): during the push AND while inside the
-                // set, the Projects panel scales past 1 toward the anchor
-                // plate — the camera dollying in as emphasis. Nothing fades;
-                // the scene change is the cut (the set mounting over it). It
-                // holds the pushed frame beneath the set so the exit cut lands
-                // back on it before the settle-out (see CSS).
-                data-depth={isProjects && depth !== "tableau" ? "case" : undefined}
                 aria-hidden={i !== index}
               >
                 {/* The vertical axis: the chapter's real (rough) tableau, tall
@@ -498,9 +451,9 @@ export function NavCandidateC() {
           })}
         </div>
 
-        {/* The case-study set (PORT-19), layered over the track: mounting is
-            the CUT at the end of the push (fresh per entry, so it always opens
-            at its head — on the insert); unmounting is the exit cut. */}
+        {/* The case-study set (PORT-19), layered over the track: mounting IS
+            the entry cut (fresh per entry, so it always opens at its head —
+            on the insert); unmounting is the exit cut. */}
         {depth === "case" ? <CaseStudy onExit={exitCase} /> : null}
       </div>
     </div>

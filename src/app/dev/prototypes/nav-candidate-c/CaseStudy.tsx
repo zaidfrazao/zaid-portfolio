@@ -22,12 +22,14 @@ import styles from "./CaseStudy.module.css";
  * its own vertical scroll context (a set you can walk around once inside), and
  * it mounts fresh on every entry, so you always arrive at the head of the set.
  *
- * THE LAYER ITSELF DOES NOT ANIMATE (walkthrough verdict, 2026-07-19): the
- * push-in is emphasis WITHIN the Projects scene — the camera dollies toward
- * the anchor plate — and the actual scene change is a CUT. This component
- * mounts at the cut, already settled, opening on the insert so the cut reads
- * as a match cut on the object. Zoom-as-transition (the v1 crossfade) was
- * rejected; see the notes doc.
+ * ENTRY IS A STRAIGHT CUT and this layer does not animate (walkthrough
+ * verdicts, 2026-07-19): v1's zoom-crossfade read as a transition effect, and
+ * v2's push-then-cut still felt like "zoom on nothing" — a dolly on flat DOM
+ * has no depth cues (no parallax, no focus pull), so it reads as page
+ * magnification, not camera travel. The zoom idea is RESERVED for some future
+ * non-transition use; the scene change is a cut to close-up: this component
+ * mounts opening on the insert, so the cut reads as a match cut on the object
+ * the tableau's plate was holding. See the notes doc.
  *
  * The content is draft-real, pulled from what the repo already records: the
  * PORT-18 knolled insert as the opening figure (imported directly — dev→dev,
@@ -35,14 +37,6 @@ import styles from "./CaseStudy.module.css";
  * anchor copy. Enough depth that the set's scroll axis is real; final copy is
  * Phase-4 work.
  */
-
-/**
- * Push-in duration (Brand Guide band: 900–1200ms; mid-ish). Mirrors
- * `--push-duration` in NavCandidateC.module.css — keep in lockstep. Drives the
- * harness's push-then-cut timer (the cut — this component mounting — lands
- * when the push completes).
- */
-export const PUSH_MS = 1000;
 
 /** Rough section stubs so the set is tall enough to scroll. Draft-real copy. */
 const SECTIONS: readonly { title: string; line: string }[] = [
@@ -92,9 +86,9 @@ export function CaseStudy({ onExit }: CaseStudyProps) {
           </span>
         </div>
 
-        {/* The opening figure FIRST: the PORT-18 knolled flat-lay is the object
-            the push aimed at, so the cut lands on it — a match cut on the
-            insert, not on a fresh page header. */}
+        {/* The opening figure FIRST: the cut lands on the PORT-18 knolled
+            flat-lay — a match cut from the tableau plate's insert stub to the
+            real insert, not a cut to a fresh page header. */}
         <CatalogIQInsert />
 
         <p className={`register-kicker ${styles.kicker}`}>Case study</p>
