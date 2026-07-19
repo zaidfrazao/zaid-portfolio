@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import styles from "./Intertitle.module.css";
 
@@ -25,8 +25,15 @@ import styles from "./Intertitle.module.css";
  * keyboard chapter-nav keeps working through it.
  */
 
-/** How long the plate holds before self-dismissing (rough — judged in the walkthrough). */
+/** How long the plate holds, fully settled, before it starts to leave (rough). */
 const DWELL_MS = 1400;
+/**
+ * Fade-out duration on dismiss. The plate eases away rather than hard-cutting to
+ * nothing — a straight cut reads as jarring here. Keep in lockstep with
+ * `--exit-ms` in Intertitle.module.css (this drives the unmount timer). Under
+ * reduced motion the exit is instant (no fade, no wait).
+ */
+const EXIT_MS = 500;
 
 /** The narrator's staging copy for one chapter (deadpan; no film references). */
 export interface IntertitleCopy {
@@ -71,36 +78,68 @@ interface IntertitleProps {
 }
 
 export function Intertitle({ kicker, title, line, onDismiss }: IntertitleProps) {
-  // Guard so the dwell timer and an input dismiss can't both fire onDismiss.
+  // `false` until the enter frame flips it: the plate mounts at opacity 0, then
+  // eases in (see the CSS transition). On exit it flips back to false to ease
+  // out before the parent unmounts. Both directions are transitions, not cuts.
+  const [visible, setVisible] = useState(false);
+  // Guard so the dwell timer and an input dismiss can't both start the exit twice.
   const dismissedRef = useRef(false);
+  const reducedRef = useRef(false);
+
+  // Ease the plate in: mount at opacity 0, then flip `visible` on a later frame so
+  // the browser paints the 0 state first and the opacity change actually
+  // transitions (a single rAF can be too early — double it).
+  useEffect(() => {
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => setVisible(true));
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+  }, []);
 
   useEffect(() => {
-    const dismiss = () => {
+    reducedRef.current = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    let exitTimer = 0;
+    // Start leaving: fade out, then let the parent unmount once the fade lands.
+    // Under reduced motion there is no fade — dismiss at once (content parity).
+    const beginExit = () => {
       if (dismissedRef.current) return;
       dismissedRef.current = true;
-      onDismiss();
+      if (reducedRef.current) {
+        onDismiss();
+        return;
+      }
+      setVisible(false);
+      exitTimer = window.setTimeout(onDismiss, EXIT_MS);
     };
 
-    // Any input skips the plate at once (PRD Feature 2). Listeners only dismiss —
+    // Any input skips the plate (PRD Feature 2). Listeners only begin the exit —
     // no preventDefault — so an ArrowRight still navigates and the first scroll
     // gesture still reaches the panel underneath.
-    const timer = window.setTimeout(dismiss, DWELL_MS);
-    window.addEventListener("pointerdown", dismiss);
-    window.addEventListener("keydown", dismiss);
-    window.addEventListener("wheel", dismiss, { passive: true });
-    window.addEventListener("touchstart", dismiss, { passive: true });
+    const dwellTimer = window.setTimeout(beginExit, DWELL_MS);
+    window.addEventListener("pointerdown", beginExit);
+    window.addEventListener("keydown", beginExit);
+    window.addEventListener("wheel", beginExit, { passive: true });
+    window.addEventListener("touchstart", beginExit, { passive: true });
 
     return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener("pointerdown", dismiss);
-      window.removeEventListener("keydown", dismiss);
-      window.removeEventListener("wheel", dismiss);
-      window.removeEventListener("touchstart", dismiss);
+      window.clearTimeout(dwellTimer);
+      window.clearTimeout(exitTimer);
+      window.removeEventListener("pointerdown", beginExit);
+      window.removeEventListener("keydown", beginExit);
+      window.removeEventListener("wheel", beginExit);
+      window.removeEventListener("touchstart", beginExit);
     };
   }, [onDismiss]);
 
   return (
-    <div className={styles.plate} aria-hidden="true">
+    <div className={styles.plate} data-visible={visible} aria-hidden="true">
       <p className={`register-kicker ${styles.kicker}`}>{kicker}</p>
       <h2 className={`register-intertitle ${styles.title}`}>{title}</h2>
       <p className={styles.line}>{line}</p>

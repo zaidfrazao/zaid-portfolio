@@ -46,10 +46,14 @@ Mechanics that keep it honest:
 - **aria-hidden.** The harness already owns an `aria-live` status line that
   announces the settled chapter, so the plate is decorative staging for sighted
   users; it does not re-announce or trap.
-- **Reduced motion.** The plate enters as a ~220ms opacity resolve, then holds
-  perfectly still (Hard Rule 2). Under `prefers-reduced-motion: reduce` the
-  enter is a straight cut (no fade); content parity is total. The dwell is
-  unchanged.
+- **Eases both ways (walkthrough tuning).** First pass hard-cut on dismiss (the
+  plate just unmounted) and entered in ~220ms — it read as too sudden. Now both
+  directions are opacity transitions: ~600ms ease in, hold perfectly still
+  (Hard Rule 2), then ~500ms ease out before it unmounts. The exit duration and
+  the JS unmount timer are kept in lockstep (`--exit-ms` / `EXIT_MS`).
+- **Reduced motion.** Under `prefers-reduced-motion: reduce` both directions are
+  straight cuts (no fade) and the exit is immediate (no wait); content parity is
+  total.
 
 ## Draft copy (deadpan narrator; no film references)
 

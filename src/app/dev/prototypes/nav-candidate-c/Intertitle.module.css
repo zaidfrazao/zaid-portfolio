@@ -10,6 +10,14 @@
  */
 
 .plate {
+  /* Durations for the fade in / out. --exit-ms must match EXIT_MS in
+     Intertitle.tsx (that JS timer waits out this fade before unmounting). Enter
+     is a touch slower than exit so the plate arrives gently and clears briskly. */
+  --enter-ms: 600ms;
+  --exit-ms: 500ms;
+  /* Mechanical, on-rails easing — no overshoot (Brand Guide → Motion). */
+  --ease: cubic-bezier(0.45, 0.05, 0.55, 0.95);
+
   /* Anchored to .viewport (already position: relative) — scoped to the
      prototype frame, not the whole screen. Above the track; below nothing. */
   position: absolute;
@@ -30,9 +38,17 @@
   outline: var(--frame-line-width) solid var(--color-paper);
   outline-offset: calc(-1 * var(--frame-line-inset));
 
-  /* Enter as a quick resolve, then hold perfectly still until dismissed
-     (Hard Rule 2: resting states are fully static — no ambient motion). */
-  animation: intertitle-in 220ms ease-out both;
+  /* Mounts at 0, eases to 1 (enter), eases back to 0 (exit) — both as
+     transitions so neither direction is an abrupt cut. Between the two it holds
+     perfectly still (Hard Rule 2: resting states are fully static). */
+  opacity: 0;
+  transition: opacity var(--exit-ms) var(--ease);
+}
+
+/* data-visible flips true on the enter frame (longer duration), false on exit. */
+.plate[data-visible="true"] {
+  opacity: 1;
+  transition-duration: var(--enter-ms);
 }
 
 .kicker {
@@ -51,19 +67,11 @@
   opacity: 0.9;
 }
 
-@keyframes intertitle-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* prefers-reduced-motion: the plate is a straight cut — instant, no fade
-   (Brand Guide hard rule; content parity is total). */
+/* prefers-reduced-motion: both directions are straight cuts — instant, no fade
+   (Brand Guide hard rule; content parity is total). The JS also dismisses at
+   once under reduced motion, so there is no exit wait either. */
 @media (prefers-reduced-motion: reduce) {
   .plate {
-    animation: none;
+    transition: none;
   }
 }
