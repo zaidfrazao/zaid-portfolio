@@ -57,14 +57,21 @@ at the cut — the camera doesn't stay committed under the set).
 Mechanics proven here that the engine inherits: the origin is *aimed* live
 (`getBoundingClientRect` of target vs. panel at hover start → `--lean-x/y` in
 %) — the same "aim the camera" requirement the v2 transition flagged, now
-actually implemented; **reveals that ride a camera move must be paint-only** —
-the first reveal animated its height (0fr→1fr grid) and jittered on the way
-out, because a layout change shifts the plate while the panel transform is
-still settling; the space is now reserved and only opacity animates (walkthrough
-caught the jitter, fix verified: zero scrollHeight change through the settle);
-the reveal text stays in the DOM at rest (content parity for SRs), keyboard
-gets lean + reveal via focus; reduced motion keeps the reveal (instant) and
-drops the lean entirely — a travel-less scale jump is noise. A further candidate use: pushing into a real photograph (insert
+actually implemented; **scroll chrome must not ride the camera** — a
+settle-back jitter was first misdiagnosed as the reveal's height animation
+(space was briefly reserved for it), but the walkthrough pinned the real
+culprit: the panel is the transformed layer AND the scroll container, so its
+native scrollbar scaled with every lean — sliding out through the frame edge,
+back in on settle, its thumb resizing as the reveal changed scroll height.
+The stage now hides native scrollbars on the panels (`scrollbar-width: none`;
+scroll still works via wheel/touch/keys) and the height-animating reveal is
+restored. Engine rule: scroll indicators live *outside* the camera-transformed
+layer, or the stage hides native scroll chrome (a locked-off frame arguably
+wants no browser chrome anyway — a production scroll affordance, if needed, is
+its own staged element); the reveal text stays in the DOM at rest (content
+parity for SRs), keyboard gets lean + reveal via focus; reduced motion keeps
+the reveal (instant) and drops the lean entirely — a travel-less scale jump
+is noise. A further candidate use: pushing into a real photograph (insert
 specimen → gallery, per the PORT-18 production direction) — detail-revealing,
 so the same "zoom must reveal" rule holds.
 
