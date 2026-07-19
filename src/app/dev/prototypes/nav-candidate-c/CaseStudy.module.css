@@ -2,21 +2,12 @@
  * CaseStudy — PORT-19 spike styles (throwaway; the notes doc is the
  * deliverable). Token-only per project convention.
  *
- * The push-in is a TWO-LAYER camera move and this file owns the incoming layer:
- * the set starts slightly small (scale .92) and transparent, and resolves UP to
- * scale 1 as the outgoing Projects panel scales past 1 (see
- * NavCandidateC.module.css → .panel[data-depth]). Both layers agree the camera
- * is moving IN — that shared direction is what makes the move read as entering
- * a set rather than a page swap. No overshoot anywhere (Brand Guide hard rule).
- *
- * Timing lives in the --push-* custom properties declared on .prototype in
- * NavCandidateC.module.css (inherited here). The opacity ramp is offset with a
- * transition-delay rather than a second easing, so the whole move keeps one
- * mechanical tempo:
- *   - entering ([data-open] is the target state): scale runs the full
- *     1000ms; opacity resolves over the BACK 600ms (delay 400ms).
- *   - leaving (base .set is the target state): opacity drops over the FIRST
- *     600ms while the scale backs out over the full 1000ms — the exact mirror.
+ * THIS LAYER DOES NOT ANIMATE (walkthrough verdict, 2026-07-19): the push-in
+ * is emphasis WITHIN the Projects scene — the panel scales toward the anchor
+ * plate (NavCandidateC.module.css → .panel[data-depth]) — and the scene
+ * change is a CUT. The set appears at the cut fully settled: opaque, scale 1,
+ * no transition. Zoom-as-transition (the v1 two-layer crossfade) was rejected
+ * as reading like a transition effect rather than camera grammar.
  */
 
 .set {
@@ -29,23 +20,6 @@
   /* Opaque ground: inside the set, the chapter wash is gone — you are in a
      different room, on the Paper ground the insert was designed against. */
   background: var(--color-paper);
-  opacity: 0;
-  transform: scale(0.92);
-  /* Keep in lockstep with .panel's transform-origin so both layers share one
-     camera axis (aimed at the anchor plate region of the viewport). */
-  transform-origin: 50% 42%;
-  transition:
-    transform var(--push-duration) var(--push-ease),
-    opacity var(--push-fade) var(--push-ease);
-  will-change: transform, opacity;
-}
-
-.set[data-open] {
-  opacity: 1;
-  transform: none;
-  transition:
-    transform var(--push-duration) var(--push-ease),
-    opacity var(--push-fade) var(--push-ease) var(--push-fade-delay);
 }
 
 /* The scrollable column of set content — same shape as the harness panelInner,
@@ -77,8 +51,8 @@
   color: var(--color-umber);
 }
 
-/* The heading takes focus programmatically on settle (tabIndex={-1}); the ring
-   would read as a click target on a non-interactive element. */
+/* The heading takes focus programmatically at the cut (tabIndex={-1}); the
+   ring would read as a click target on a non-interactive element. */
 .title:focus {
   outline: none;
 }
@@ -92,16 +66,4 @@
   flex-direction: column;
   gap: var(--space-2);
   width: 100%;
-}
-
-/* Instant cut: both the OS setting and the harness preview toggle collapse the
-   push to a straight cut — same destination, zero travel (content parity). */
-@media (prefers-reduced-motion: reduce) {
-  .set {
-    transition: none;
-  }
-}
-
-[data-reduced] .set {
-  transition: none;
 }

@@ -22,6 +22,13 @@ import styles from "./CaseStudy.module.css";
  * its own vertical scroll context (a set you can walk around once inside), and
  * it mounts fresh on every entry, so you always arrive at the head of the set.
  *
+ * THE LAYER ITSELF DOES NOT ANIMATE (walkthrough verdict, 2026-07-19): the
+ * push-in is emphasis WITHIN the Projects scene — the camera dollies toward
+ * the anchor plate — and the actual scene change is a CUT. This component
+ * mounts at the cut, already settled, opening on the insert so the cut reads
+ * as a match cut on the object. Zoom-as-transition (the v1 crossfade) was
+ * rejected; see the notes doc.
+ *
  * The content is draft-real, pulled from what the repo already records: the
  * PORT-18 knolled insert as the opening figure (imported directly — dev→dev,
  * both coverage-excluded), and section stubs derived from the ProjectsTableau
@@ -31,8 +38,9 @@ import styles from "./CaseStudy.module.css";
 
 /**
  * Push-in duration (Brand Guide band: 900–1200ms; mid-ish). Mirrors
- * `--push-duration` in NavCandidateC.module.css — keep in lockstep. Also drives
- * the harness's exit-unmount timer and the settle-then-focus timer below.
+ * `--push-duration` in NavCandidateC.module.css — keep in lockstep. Drives the
+ * harness's push-then-cut timer (the cut — this component mounting — lands
+ * when the push completes).
  */
 export const PUSH_MS = 1000;
 
@@ -53,36 +61,25 @@ const SECTIONS: readonly { title: string; line: string }[] = [
 ];
 
 interface CaseStudyProps {
-  /**
-   * The settled depth state — true once the camera should be (or has finished)
-   * pushing in. The harness mounts the layer first, then flips this a frame
-   * later so the CSS transition runs (or in the same tick under an instant cut).
-   */
-  open: boolean;
-  /** Instant-cut mode: OS prefers-reduced-motion OR the harness preview toggle. */
-  reduced: boolean;
-  /** Pull the camera back out to the Projects tableau. */
+  /** Cut back out to the Projects tableau (the harness runs the pull-back). */
   onExit: () => void;
 }
 
-export function CaseStudy({ open, reduced, onExit }: CaseStudyProps) {
+export function CaseStudy({ onExit }: CaseStudyProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
 
-  // Move focus to the set's heading once the camera settles — immediately under
-  // an instant cut. Keyboard/SR users land inside the set instead of on a
-  // now-covered tableau (the harness marks the track inert while open, and
-  // returns focus to the entry trigger on exit).
+  // The mount IS the cut, so focus moves to the set's heading immediately.
+  // Keyboard/SR users land inside the set instead of on a now-covered tableau
+  // (the harness marks the track inert while the set is up, and returns focus
+  // to the entry trigger on exit). preventScroll: the heading sits below the
+  // insert, and the default scroll-into-view would drag the set past it —
+  // the cut must land on the insert (the match-cut object), not mid-set.
   useEffect(() => {
-    if (!open) return;
-    const timer = window.setTimeout(
-      () => headingRef.current?.focus(),
-      reduced ? 0 : PUSH_MS,
-    );
-    return () => window.clearTimeout(timer);
-  }, [open, reduced]);
+    headingRef.current?.focus({ preventScroll: true });
+  }, []);
 
   return (
-    <div className={styles.set} data-open={open || undefined}>
+    <div className={styles.set}>
       <div className={styles.setInner}>
         {/* Explicit exit — the reverse move is as discoverable as the entry
             (progressive disclosure: depth by explicit entry, never trapped). */}
@@ -95,6 +92,11 @@ export function CaseStudy({ open, reduced, onExit }: CaseStudyProps) {
           </span>
         </div>
 
+        {/* The opening figure FIRST: the PORT-18 knolled flat-lay is the object
+            the push aimed at, so the cut lands on it — a match cut on the
+            insert, not on a fresh page header. */}
+        <CatalogIQInsert />
+
         <p className={`register-kicker ${styles.kicker}`}>Case study</p>
         <h2
           ref={headingRef}
@@ -106,10 +108,6 @@ export function CaseStudy({ open, reduced, onExit }: CaseStudyProps) {
         <p className={styles.line}>
           In which one product is examined at close range.
         </p>
-
-        {/* The opening figure: the PORT-18 knolled flat-lay, now literally the
-            thing the push-in lands on. */}
-        <CatalogIQInsert />
 
         {SECTIONS.map((section) => (
           <Plate

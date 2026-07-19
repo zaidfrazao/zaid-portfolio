@@ -29,15 +29,12 @@
 
   /* Push-in (PORT-19; Brand Guide → Animation & Motion): entering a case
      study, 900–1200ms, mechanical, no overshoot. NOTE: keep --push-duration in
-     lockstep with PUSH_MS in CaseStudy.tsx (drives the exit-unmount and focus
-     timers). One tempo for both layers; the opacity ramp is offset with
-     --push-fade-delay rather than a second easing. Inherited by
-     CaseStudy.module.css for the incoming layer. */
+     lockstep with PUSH_MS in CaseStudy.tsx (drives the push-then-cut timer).
+     The push is EMPHASIS within the scene — nothing fades; the scene change
+     is a straight cut when the push lands (see .panel below). */
   --push-duration: 1000ms;
   --push-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
-  --push-fade: 600ms;
-  --push-fade-delay: 400ms;
-  /* How far past 1 the outgoing tableau scales — "the camera passes the plate". */
+  /* How close the camera gets to the plate before the cut. */
   --push-scale: 1.7;
 
   display: flex;
@@ -141,17 +138,16 @@
 /* Each panel is its own NATIVE vertical scroll context — this is the hybrid's
    vertical axis. Horizontal is clipped so the panel never scrolls sideways.
 
-   PORT-19 adds the outgoing half of the push-in: [data-depth="case"] scales the
-   panel past 1 toward the anchor-plate region and fades it, while the case
-   layer (CaseStudy.module.css) resolves up to 1 — two layers, one camera. The
-   transform sits on the PANEL (the viewport-sized scroll container), not the
-   tall inner column, so the origin is scroll-independent and stated against
-   the visible box. Origin is kept in lockstep with .set's; 42% aims at where
-   the CatalogIQ plate sits on entry — a felt value, tuned at the walkthrough.
-
-   Fade choreography mirrors exactly: entering depth ([data-depth] is the
-   target state), opacity drops over the BACK --push-fade of the move; leaving
-   (base .panel is the target state), it returns over the FIRST --push-fade. */
+   PORT-19 adds the push-in: [data-depth="case"] dollies the panel toward the
+   anchor-plate region — scale only, NOTHING FADES. The push is emphasis
+   within the scene (walkthrough verdict: zoom is not a transition); the scene
+   change is a straight cut — the opaque set mounting over the held frame —
+   and the exit cut reveals this frame again before [data-depth] drops and the
+   panel settles 1.7 → 1 over the same move. The transform sits on the PANEL
+   (the viewport-sized scroll container), not the tall inner column, so the
+   origin is scroll-independent and stated against the visible box. 42% aims
+   at where the CatalogIQ plate sits on entry — a felt value, tuned at the
+   walkthrough. */
 .panel {
   flex: 0 0 100%;
   width: 100%;
@@ -159,17 +155,11 @@
   overflow-y: auto;
   overflow-x: hidden;
   transform-origin: 50% 42%;
-  transition:
-    transform var(--push-duration) var(--push-ease),
-    opacity var(--push-fade) var(--push-ease);
+  transition: transform var(--push-duration) var(--push-ease);
 }
 
 .panel[data-depth="case"] {
   transform: scale(var(--push-scale));
-  opacity: 0;
-  transition:
-    transform var(--push-duration) var(--push-ease),
-    opacity var(--push-fade) var(--push-ease) var(--push-fade-delay);
 }
 
 /* Faint per-chapter washes so a move reads as travel between distinct rooms.
@@ -242,8 +232,8 @@
 
 /* The harness's manual instant-cut preview (PORT-19): the same cuts as the OS
    setting, toggled from the chrome so the walkthrough can compare full motion
-   and the fallback side by side. CaseStudy.module.css carries the matching
-   rule for the case layer. */
+   and the fallback side by side. (The case-study set never animates — the cut
+   is already a cut — so only the push and the chapter moves collapse.) */
 .prototype[data-reduced] .track {
   transition: none;
   filter: none;
