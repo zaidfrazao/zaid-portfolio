@@ -92,7 +92,7 @@ These are deliberately left open; the spike exists to answer them by feel.
 1. **Re-show rule (headline).** First-visit-only (current), always-on-entry, or
    only-on-forward-progress (show going deeper, silent on return)? First-visit
    keeps nav fast but means a chapter you loop back to never re-announces.
-2. **Hold length.** ~2.4s of fully-settled reading time (the fade-in is separate,
+2. **Hold length.** ~4s of fully-settled reading time (the fade-in is separate,
    so it counts from when the plate is legible; any input dismisses sooner). Too
    slow (in the way) or too fast (unreadable) for a plate the visitor mostly
    skips anyway?
