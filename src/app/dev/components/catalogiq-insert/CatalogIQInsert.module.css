@@ -1,0 +1,160 @@
+/*
+ * CatalogIQ knolled insert (PORT-18) — token-only, flat, static-at-rest.
+ *
+ *   - Bento master grid (≥768px): one 6-column grid, ONE gutter token, mixed
+ *     object footprints — a portrait hero, landscape sheets, small tags, a
+ *     square print, a full-width swatch rail — packed on one rhythm and
+ *     roughly mirrored about the centreline (Brand Guide → Grid discipline).
+ *     Equal cells read as a table; mixed footprints on shared gutters read as
+ *     a knolled tray.
+ *   - The overhead read comes from the object glyphs (paper sheets, prints,
+ *     tags), not the grid alone — the first pass proved a grid of uniform
+ *     tiles reads as a summary, not a flat-lay.
+ *   - No shadows, sharp corners, no transitions (Hard Rules 1–2). Layering is
+ *     fill + hairline (Paper objects on the Plate tray); the loadsheet stack
+ *     is offset edges, not depth; the tray edge is the Plate frame-line.
+ *
+ * Mobile-first: below 768px the tray is a single centred column — a tall tray
+ * of labeled objects — because the fixed-size registers (11px labels, mono
+ * stats) cannot shrink with narrow columns. Desktop restores the bento still.
+ */
+
+.insert {
+  margin: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The tray — the surface the objects lie on. */
+.tray {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3);
+}
+
+/* A specimen: the object over its museum-tag label, centred. */
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.itemLabel {
+  color: var(--color-sepia);
+  text-align: center;
+}
+
+/* ── The objects ───────────────────────────────────────────────────────── */
+
+/* Landscape paperwork: supplier card, loadsheet stack. */
+.sheet {
+  width: min(100%, 16rem);
+  height: auto;
+}
+
+/* The portrait listing card — the bento hero. */
+.hero {
+  width: min(100%, 15rem);
+  height: auto;
+}
+
+/* The printed product photo. */
+.photo {
+  width: min(100%, 8rem);
+  height: auto;
+}
+
+/* The swatch rail. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+/* A punched specimen tag. */
+.tag {
+  width: min(100%, 11rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: 1px solid var(--color-rule);
+  background: var(--color-paper);
+}
+
+/* The punched square hole — tray fill showing through the tag. */
+.tagHole {
+  width: var(--space-1);
+  height: var(--space-1);
+  background: var(--color-plate);
+  border: 1px solid var(--color-rule);
+}
+
+.statValue {
+  color: var(--color-umber);
+}
+
+/* The unverified-figure marker rides small and quiet in Sienna. */
+.dagger {
+  color: var(--color-sienna);
+}
+
+.footnote {
+  max-width: 52ch;
+  margin-inline: auto;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  /* The bento still: hero centre spanning two rows, wings roughly mirrored
+     (two tags left; photo + tag right), the swatch rail underlining the lot. */
+  .tray {
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-areas:
+      "supplier supplier listing listing loadsheet loadsheet"
+      "tagloc   tagcom   listing listing photo     taglist"
+      "chips    chips    chips   chips   chips     chips";
+    padding: var(--space-4);
+  }
+
+  .areaSupplier {
+    grid-area: supplier;
+  }
+
+  .areaListing {
+    grid-area: listing;
+  }
+
+  .areaLoadsheet {
+    grid-area: loadsheet;
+  }
+
+  .areaTagLoc {
+    grid-area: tagloc;
+  }
+
+  .areaTagCommits {
+    grid-area: tagcom;
+  }
+
+  .areaPhoto {
+    grid-area: photo;
+  }
+
+  .areaTagListings {
+    grid-area: taglist;
+  }
+
+  .areaChips {
+    grid-area: chips;
+  }
+}
