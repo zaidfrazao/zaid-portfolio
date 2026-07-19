@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   type CSSProperties,
 } from "react";
 
@@ -13,6 +14,7 @@ import { CHAPTERS } from "@/components/ChapterIndex";
 import { TABLEAUX } from "@/components/tableaux";
 import { toRoman } from "@/lib/numerals";
 
+import { CaseStudy, PUSH_MS } from "./CaseStudy";
 import { INTERTITLES, Intertitle } from "./Intertitle";
 import styles from "./NavCandidateC.module.css";
 
@@ -37,6 +39,14 @@ import styles from "./NavCandidateC.module.css";
  *    axis is NATIVE scroll WITHIN a chapter. Scroll does the vertical thing the
  *    body expects, so there is nothing to hijack and no mobile pitfall.
  *
+ * Since PORT-19 the harness also carries a DEPTH axis, orthogonal to chapter
+ * travel: an explicit "Enter the case study" control on the Projects chapter
+ * runs the Brand Guide push-in (1000ms, no overshoot) into the CatalogIQ set
+ * (./CaseStudy), and backs out again on Esc / "Back to Projects". Chapter
+ * travel while pushed in first cuts the depth axis closed (spike rule — the
+ * rhythm question is in docs/prototypes/PORT-19-push-in-entry.md). A harness
+ * chrome toggle previews the reduced-motion instant cut without OS settings.
+ *
  * Throwaway quality by intent — docs/prototypes/PORT-15-candidate-c.md holds the
  * learnings and the comparative A/B/C notes. It composes the shipped leaves
  * (Button, the CHAPTERS source of truth, the Roman-numeral helper) and, since
@@ -55,6 +65,20 @@ const DISTANT = 2;
 
 type Transit = "truck" | "whip";
 
+// prefers-reduced-motion as an external store (render-time consumers: the
+// CaseStudy layer's focus timing and the motion-toggle label; reducedRef
+// mirrors it for stable callbacks).
+const REDUCED_MQ = "(prefers-reduced-motion: reduce)";
+
+function subscribeReducedMotion(onStoreChange: () => void) {
+  const mq = window.matchMedia(REDUCED_MQ);
+  mq.addEventListener("change", onStoreChange);
+  return () => mq.removeEventListener("change", onStoreChange);
+}
+
+const getReducedMotion = () => window.matchMedia(REDUCED_MQ).matches;
+const getReducedMotionServer = () => false;
+
 export function NavCandidateC() {
   const [index, setIndex] = useState(0);
   // How the LAST move travelled, so CSS can pick truck vs whip timing/easing.
@@ -64,6 +88,20 @@ export function NavCandidateC() {
   // The chapter id whose intertitle plate is currently held over the viewport
   // (PORT-17), or null when none is showing.
   const [intertitleId, setIntertitleId] = useState<string | null>(null);
+  // The depth axis (PORT-19): mounted = the case-study layer is in the DOM;
+  // open = the settled pushed-in state (drives the CSS transition both ways —
+  // mounted && !open is the pull-back in flight, before unmount).
+  const [caseMounted, setCaseMounted] = useState(false);
+  const [caseOpen, setCaseOpen] = useState(false);
+  // Manual instant-cut preview (the AC's reduced-motion fallback demo) — ORed
+  // with the OS prefers-reduced-motion setting everywhere motion branches.
+  const [manualReduced, setManualReduced] = useState(false);
+  // OS reduced-motion, subscribed as an external store (see module scope).
+  const osReduced = useSyncExternalStore(
+    subscribeReducedMotion,
+    getReducedMotion,
+    getReducedMotionServer,
+  );
   const last = CHAPTERS.length - 1;
 
   // Refs so callbacks stay stable and closures never read stale state.
@@ -77,6 +115,18 @@ export function NavCandidateC() {
   // only on the FIRST entry to each chapter (see the entry effect below). A ref,
   // not state: it must survive StrictMode's dev double-effect without a re-render.
   const seenRef = useRef<Set<string>>(new Set());
+  // Depth-axis refs (PORT-19): the settled depth target for stable callbacks,
+  // pending rAF/timer handles for the mount→open flip and the exit unmount, the
+  // entry trigger for focus return, and whether that return is owed (exit only —
+  // a chapter-move cut keeps focus on the nav control that caused it).
+  const caseOpenRef = useRef(false);
+  const caseRafRef = useRef<number[]>([]);
+  const caseTimerRef = useRef<number | null>(null);
+  const enterButtonRef = useRef<HTMLButtonElement | HTMLAnchorElement | null>(
+    null,
+  );
+  const returnFocusRef = useRef(false);
+  const manualReducedRef = useRef(false);
 
   // Dismiss the intertitle plate — the parent unmounts it (Intertitle calls this
   // on any input or after its dwell).
@@ -89,8 +139,73 @@ export function NavCandidateC() {
     }
   }, []);
 
+  // Effective reduced-motion: the OS setting OR the manual preview toggle.
+  const isReduced = useCallback(
+    () => reducedRef.current || manualReducedRef.current,
+    [],
+  );
+
+  const clearCaseTimers = useCallback(() => {
+    for (const id of caseRafRef.current) cancelAnimationFrame(id);
+    caseRafRef.current = [];
+    if (caseTimerRef.current !== null) {
+      window.clearTimeout(caseTimerRef.current);
+      caseTimerRef.current = null;
+    }
+  }, []);
+
+  // Push in: mount the case layer at its un-pushed state, then flip `open` on a
+  // later frame so the browser paints the initial state first and the CSS
+  // transition actually runs (double-rAF, same as the intertitle's ease-in).
+  // Under an instant cut the layer mounts already settled — no travel at all.
+  const enterCase = useCallback(() => {
+    if (caseOpenRef.current) return;
+    caseOpenRef.current = true;
+    clearCaseTimers();
+    setCaseMounted(true);
+    if (isReduced()) {
+      setCaseOpen(true);
+      return;
+    }
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => setCaseOpen(true));
+      caseRafRef.current.push(raf2);
+    });
+    caseRafRef.current.push(raf1);
+  }, [clearCaseTimers, isReduced]);
+
+  // Pull back: flip to the un-pushed state (the CSS mirrors the move), then
+  // unmount once the camera lands. Focus returns to the entry trigger via the
+  // unmount effect below — it can't be focused here, the track is still inert.
+  const exitCase = useCallback(() => {
+    if (!caseOpenRef.current) return;
+    caseOpenRef.current = false;
+    clearCaseTimers();
+    setCaseOpen(false);
+    returnFocusRef.current = true;
+    if (isReduced()) {
+      setCaseMounted(false);
+      return;
+    }
+    caseTimerRef.current = window.setTimeout(
+      () => setCaseMounted(false),
+      PUSH_MS,
+    );
+  }, [clearCaseTimers, isReduced]);
+
   const goTo = useCallback(
     (target: number) => {
+      // Depth is orthogonal to chapter travel: any chapter move first cuts the
+      // case study closed — instant, so the truck/whip starts from the tableau.
+      // Whether it should pull back instead (or block) is a rhythm question for
+      // the walkthrough; see the PORT-19 notes doc.
+      if (caseOpenRef.current) {
+        caseOpenRef.current = false;
+        clearCaseTimers();
+        setCaseOpen(false);
+        setCaseMounted(false);
+      }
+
       const current = indexRef.current;
       // Clamp instead of wrapping: truck and whip both run on rails and never
       // overshoot their ends (Brand Guide hard rule), so boundaries are hard stops.
@@ -106,7 +221,7 @@ export function NavCandidateC() {
       // filter transitions up now and back down at mid-transit (see the CSS ramp),
       // so it reads as motion blur that resolves as the frame settles.
       clearBlurTimer();
-      if (mode === "whip" && !reducedRef.current) {
+      if (mode === "whip" && !isReduced()) {
         setBlurring(true);
         blurTimerRef.current = window.setTimeout(
           () => setBlurring(false),
@@ -116,7 +231,7 @@ export function NavCandidateC() {
         setBlurring(false);
       }
     },
-    [clearBlurTimer, last],
+    [clearBlurTimer, clearCaseTimers, isReduced, last],
   );
 
   // Keep the ref the stable callbacks read in sync with rendered state.
@@ -142,16 +257,26 @@ export function NavCandidateC() {
     }
   }, [index]);
 
-  // Track prefers-reduced-motion so the whip runs without a blur pulse.
+  // Mirror the subscribed OS reduced-motion value into the ref that stable
+  // callbacks read (the whip's blur pulse, the push-in's cut branch).
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    reducedRef.current = mq.matches;
-    const onChange = () => {
-      reducedRef.current = mq.matches;
-    };
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
+    reducedRef.current = osReduced;
+  }, [osReduced]);
+
+  // Keep the manual instant-cut toggle readable from stable callbacks.
+  useEffect(() => {
+    manualReducedRef.current = manualReduced;
+  }, [manualReduced]);
+
+  // Return focus to the entry trigger after an exit lands. Runs post-render so
+  // the track's inert flag is already off — calling focus() inside exitCase
+  // would silently fail against a still-inert subtree.
+  useEffect(() => {
+    if (!caseMounted && returnFocusRef.current) {
+      returnFocusRef.current = false;
+      enterButtonRef.current?.focus();
+    }
+  }, [caseMounted]);
 
   // Keyboard — the mandatory non-scroll path, identical to A and B so the three
   // candidates compare head-to-head. Arrows step (adjacent → truck); Home/End
@@ -180,6 +305,11 @@ export function NavCandidateC() {
           event.preventDefault();
           goTo(last);
           break;
+        case "Escape":
+          // The depth axis's keyboard exit (PORT-19). exitCase no-ops when the
+          // case study isn't open, so no guard needed here.
+          exitCase();
+          break;
         default:
           break;
       }
@@ -187,10 +317,15 @@ export function NavCandidateC() {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [goTo, last]);
+  }, [exitCase, goTo, last]);
 
-  // Clear a pending blur timer on unmount.
-  useEffect(() => clearBlurTimer, [clearBlurTimer]);
+  // Clear pending blur/depth timers on unmount.
+  useEffect(() => {
+    return () => {
+      clearBlurTimer();
+      clearCaseTimers();
+    };
+  }, [clearBlurTimer, clearCaseTimers]);
 
   const current = CHAPTERS[index];
   // The chapter the currently-held intertitle introduces (id → chapter), or
@@ -200,7 +335,10 @@ export function NavCandidateC() {
     : undefined;
 
   return (
-    <div className={styles.prototype}>
+    <div
+      className={styles.prototype}
+      data-reduced={manualReduced ? true : undefined}
+    >
       {/* Controls: the rough chapter index + prev/next — the discoverable,
           hijack-free horizontal path (candidate A's model). Buttons, not
           anchors: this spike changes local state rather than routing. */}
@@ -243,6 +381,17 @@ export function NavCandidateC() {
           >
             Next →
           </Button>
+          {/* PORT-19: preview the reduced-motion instant cut without flipping
+              OS settings — for the walkthrough's side-by-side judgment. Applies
+              to every move (push, truck, whip), like the real setting. When the
+              OS already asks for reduced motion, that wins and this reads so. */}
+          <Button
+            variant="secondary"
+            onClick={() => setManualReduced((value) => !value)}
+            aria-pressed={manualReduced}
+          >
+            Motion: {osReduced || manualReduced ? "instant cut" : "full"}
+          </Button>
         </div>
       </div>
 
@@ -254,10 +403,13 @@ export function NavCandidateC() {
         data-transit={transit}
         data-blurring={blurring ? true : undefined}
       >
-        {/* aria-live announces the settled chapter for keyboard/SR users. Focus
-            management on chapter change is a known gap — see the notes. */}
+        {/* aria-live announces the settled chapter for keyboard/SR users — and,
+            since PORT-19, the depth state too. Focus management on chapter
+            change is a known gap — see the notes. */}
         <p className={styles.srStatus} role="status" aria-live="polite">
-          Chapter {index + 1} of {CHAPTERS.length}: {current.label}
+          {caseOpen
+            ? "Case study: CatalogIQ, within chapter 3, Projects."
+            : `Chapter ${index + 1} of ${CHAPTERS.length}: ${current.label}`}
         </p>
 
         {/* The intertitle plate (PORT-17): held over the entering chapter, above
@@ -274,14 +426,20 @@ export function NavCandidateC() {
           />
         ) : null}
 
+        {/* inert while pushed in (PORT-19): the tableau behind the case-study
+            set must not stay tabbable/readable under the overlay. Released the
+            moment the pull-back starts, so the tableau is interactive again as
+            it resolves back in. */}
         <div
           className={styles.track}
           data-transit={transit}
           data-blurring={blurring ? true : undefined}
+          inert={caseOpen || undefined}
           style={{ "--truck-i": index } as CSSProperties}
         >
           {CHAPTERS.map((chapter, i) => {
             const Tableau = TABLEAUX[chapter.id];
+            const isProjects = chapter.id === "projects";
             return (
               <section
                 key={chapter.id}
@@ -290,6 +448,10 @@ export function NavCandidateC() {
                 }}
                 className={styles.panel}
                 data-chapter={chapter.id}
+                // The outgoing half of the push-in (PORT-19): while the case
+                // study is open, the Projects panel scales past 1 toward the
+                // anchor plate and fades — the camera dollying in (see CSS).
+                data-depth={isProjects && caseOpen ? "case" : undefined}
                 aria-hidden={i !== index}
               >
                 {/* The vertical axis: the chapter's real (rough) tableau, tall
@@ -304,11 +466,36 @@ export function NavCandidateC() {
                     {chapter.label}
                   </h2>
                   {Tableau ? <Tableau /> : null}
+                  {isProjects ? (
+                    // PORT-19: the explicit entry into depth (progressive
+                    // disclosure — push-in on explicit entry, never a novel
+                    // mechanic). Harness-owned chrome below the tableau for the
+                    // spike; production wants the affordance on the CatalogIQ
+                    // plate itself (see the notes doc).
+                    <Button
+                      ref={enterButtonRef}
+                      variant="secondary"
+                      onClick={enterCase}
+                    >
+                      Enter the case study →
+                    </Button>
+                  ) : null}
                 </div>
               </section>
             );
           })}
         </div>
+
+        {/* The case-study set (PORT-19), layered over the track: mounted fresh
+            per entry (so it always opens at its head), transitioned via
+            data-open, unmounted after the pull-back lands. */}
+        {caseMounted ? (
+          <CaseStudy
+            open={caseOpen}
+            reduced={osReduced || manualReduced}
+            onExit={exitCase}
+          />
+        ) : null}
       </div>
     </div>
   );
