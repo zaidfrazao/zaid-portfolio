@@ -198,26 +198,20 @@
   cursor: pointer;
 }
 
-/* The revealed line: collapsed at rest via the 0fr→1fr grid trick (animatable
-   height without magic numbers), opened by hover/focus-visible in step with
-   the camera lean. The text is always in the DOM — the reveal is visual
-   staging, not conditional content. */
+/* The revealed line: its SPACE is always reserved and only opacity animates.
+   The first pass collapsed the height (0fr→1fr grid trick) and jittered on
+   the way out — a layout-animating reveal shifts the plate while the panel's
+   transform is still settling, and the two fight. Rule for the engine:
+   reveals that ride a camera move must be paint-only (opacity), never
+   layout. The text is always in the DOM — the reveal is visual staging, not
+   conditional content. */
 .entryReveal {
-  display: grid;
-  grid-template-rows: 0fr;
   opacity: 0;
-  transition:
-    grid-template-rows var(--lean-ms) var(--lean-ease),
-    opacity var(--lean-ms) var(--lean-ease);
-}
-
-.entryReveal > span {
-  overflow: hidden;
+  transition: opacity var(--lean-ms) var(--lean-ease);
 }
 
 .entryPlate:hover .entryReveal,
 .entryPlate:focus-visible .entryReveal {
-  grid-template-rows: 1fr;
   opacity: 1;
 }
 

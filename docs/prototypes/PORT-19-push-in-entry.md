@@ -57,10 +57,14 @@ at the cut — the camera doesn't stay committed under the set).
 Mechanics proven here that the engine inherits: the origin is *aimed* live
 (`getBoundingClientRect` of target vs. panel at hover start → `--lean-x/y` in
 %) — the same "aim the camera" requirement the v2 transition flagged, now
-actually implemented; the reveal text stays in the DOM at rest (content parity
-for SRs), keyboard gets lean + reveal via focus; reduced motion keeps the
-reveal (instant) and drops the lean entirely — a travel-less scale jump is
-noise. A further candidate use: pushing into a real photograph (insert
+actually implemented; **reveals that ride a camera move must be paint-only** —
+the first reveal animated its height (0fr→1fr grid) and jittered on the way
+out, because a layout change shifts the plate while the panel transform is
+still settling; the space is now reserved and only opacity animates (walkthrough
+caught the jitter, fix verified: zero scrollHeight change through the settle);
+the reveal text stays in the DOM at rest (content parity for SRs), keyboard
+gets lean + reveal via focus; reduced motion keeps the reveal (instant) and
+drops the lean entirely — a travel-less scale jump is noise. A further candidate use: pushing into a real photograph (insert
 specimen → gallery, per the PORT-18 production direction) — detail-revealing,
 so the same "zoom must reveal" rule holds.
 
