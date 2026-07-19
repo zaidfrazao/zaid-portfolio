@@ -1,16 +1,22 @@
 /*
- * CatalogIQ knolled insert (PORT-18) — token-only, flat, static-at-rest.
+ * CatalogIQ knolled insert (PORT-18, second pass) — token-only, flat,
+ * static-at-rest.
  *
- *   - Knolling (Brand Guide → Spacing & Layout): every band is a strict grid
- *     sharing ONE gutter token (--space-2), items axis-aligned and centred, so
- *     the whole reads as objects laid on a tray from directly above.
- *   - No shadows, sharp corners, no transitions (Hard Rules 1–2). The tray edge
- *     is the Plate frame-line (the "proscenium"), not simulated depth.
- *   - Ink and spacing are tokens only; bespoke art/measure literals (svg widths,
- *     ch caps) follow the tableaux.module.css precedent.
+ *   - One 3×3 master grid on the tray (odd column count, symmetric about the
+ *     centreline — Brand Guide → Grid discipline), ONE gutter token throughout,
+ *     so the whole reads as objects laid on a surface and shot from above.
+ *   - The overhead read comes from the object glyphs (paper sheets, tools,
+ *     tags), not from the grid alone — the first pass proved a grid of uniform
+ *     tiles reads as a summary, not a flat-lay.
+ *   - No shadows, sharp corners, no transitions (Hard Rules 1–2). The loadsheet
+ *     stack is expressed by offset edges, not depth; the tray edge is the Plate
+ *     frame-line.
  *
- * Authored mobile-first: each band collapses to a single column; the knolled
- * multi-column grids live in the 768px media block.
+ * Mobile-first: below 768px the tray is a single centred column — a tall tray
+ * of labeled objects — because the fixed-size registers (11px labels, mono
+ * stats) cannot shrink with a 3-up column. Desktop restores the full 3×3
+ * composition. Whether mobile should instead keep a scaled-down still is the
+ * open question logged in the notes doc.
  */
 
 .insert {
@@ -22,17 +28,17 @@
   gap: var(--space-2);
 }
 
-/* The tray holds the flat-lay; the shared gutter between bands equals the
-   in-band gutter so the whole grid reads as one rhythm. */
+/* The tray — the surface the objects lie on. */
 .tray {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-4);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3);
 }
 
-/* A specimen: the artifact over its museum-tag label, centred. */
+/* A specimen: the object over its museum-tag label, centred. */
 .item {
   display: flex;
   flex-direction: column;
@@ -45,27 +51,19 @@
   text-align: center;
 }
 
-/* ── Band 1 — pipeline screens ─────────────────────────────────────────── */
+/* ── Row 1 — the paperwork ─────────────────────────────────────────────── */
 
-.stages {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-2);
-}
-
-.screen {
-  width: 100%;
+.card {
+  width: min(100%, 16rem);
   height: auto;
 }
 
-/* ── Band 2 — the connective diagram ───────────────────────────────────── */
+/* ── Row 2 — the tools and the stack ───────────────────────────────────── */
 
-.pipeline {
-  width: min(100%, 30rem);
+.tool {
+  width: min(100%, 12rem);
   height: auto;
 }
-
-/* ── Band 3 — the stack chips ──────────────────────────────────────────── */
 
 .chips {
   display: flex;
@@ -74,20 +72,24 @@
   gap: var(--space-1);
 }
 
-/* ── Band 4 — the numbers ──────────────────────────────────────────────── */
+/* ── Row 3 — the numbers, as punched specimen tags ─────────────────────── */
 
-.stats {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-2);
-}
-
-.stat {
+.tag {
+  width: min(100%, 13rem);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-1);
   padding: var(--space-2);
+  border: 1px solid var(--color-rule);
+  background: var(--color-paper);
+}
+
+/* The punched square hole — tray fill showing through the tag. */
+.tagHole {
+  width: var(--space-1);
+  height: var(--space-1);
+  background: var(--color-plate);
   border: 1px solid var(--color-rule);
 }
 
@@ -107,13 +109,9 @@
 }
 
 @media (min-width: 768px) {
-  /* Five screen specimens across — the odd count keeps the band symmetric
-     about the centreline (Brand Guide → Grid discipline). */
-  .stages {
-    grid-template-columns: repeat(5, 1fr);
-  }
-
-  .stats {
+  /* The full 3×3 flat-lay. */
+  .tray {
     grid-template-columns: repeat(3, 1fr);
+    padding: var(--space-4);
   }
 }

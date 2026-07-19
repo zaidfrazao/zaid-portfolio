@@ -33,7 +33,14 @@
 }
 
 /* The "on a plate ground" framing: the insert dropped onto a Plate surface, as
-   a Projects tableau would host it. Generous padding so the tray breathes. */
+   a Projects tableau would host it. Generous padding on desktop so the tray
+   breathes; tight on mobile so the tray keeps its width. */
 .ground {
-  padding: var(--space-6);
+  padding: var(--space-2);
+}
+
+@media (min-width: 768px) {
+  .ground {
+    padding: var(--space-6);
+  }
 }

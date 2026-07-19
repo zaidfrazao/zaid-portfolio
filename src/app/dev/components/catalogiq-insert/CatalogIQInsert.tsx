@@ -2,37 +2,45 @@ import { Caption } from "@/components/Caption";
 import { Label } from "@/components/Label";
 import { Plate } from "@/components/Plate";
 
-import { PipelineGlyph, ScreenGlyph } from "./insert-art";
+import {
+  ListingCardGlyph,
+  LoadsheetGlyph,
+  PencilGlyph,
+  RulerGlyph,
+  SupplierCardGlyph,
+} from "./insert-art";
 import styles from "./CatalogIQInsert.module.css";
 
 /**
- * CatalogIQInsert — a rough overhead "insert" for CatalogIQ (PORT-18 spike):
- * a knolled flat-lay of the project's artifacts on a strict grid with equal
- * gutters, every item labeled. It reads top-down — objects laid on a tray and
- * photographed from above — not as a card grid, because it is composed as bands
- * sharing one gutter rhythm inside an inset hairline frame (the tray edge), flat
- * and axis-aligned (Brand Guide: Knolling; grammar #7 — overhead inserts).
+ * CatalogIQInsert — a rough overhead "insert" for CatalogIQ (PORT-18 spike,
+ * second pass): a knolled flat-lay of the project's artifacts on a strict grid
+ * with equal gutters, every item labeled (Brand Guide → Knolling; grammar #7 —
+ * overhead inserts; PRD Feature 3).
  *
- * Placeholder-grade art (see insert-art.tsx), real arrangement discipline. The
- * concept is what is being judged; the SVG is throwaway. Draft-real content is
- * from docs/CONTENT_NOTES.md → CatalogIQ. Repo-verified figures (LOC, commits)
- * are shown plainly; the pilot listing count is second-hand and marked
- * "pending verification" per the same notes' verify-before-publish rule.
+ * The first pass arranged uniform UI tiles in bands and read as a generic
+ * summary — the finding (docs/prototypes/PORT-18-catalogiq-insert.md) is that
+ * the overhead read comes from *object silhouettes on a surface*, not from a
+ * grid alone. So this pass lays real-shaped objects on the tray, one 3×3 master
+ * grid, symmetric about the centreline:
  *
- * Design notes and the carry-forward questions for the production insert-layout
- * system live in docs/prototypes/PORT-18-catalogiq-insert.md.
+ *   supplier card   ·  generated listing  ·  loadsheet stack
+ *   one pencil      ·  the stack, chips   ·  one ruler
+ *   tag: LOC        ·  tag: commits       ·  tag: listings
+ *
+ * Row one is the product story as before/after paperwork; row two is the
+ * arranger's tools flanking the stack (deadpan-labeled like everything else);
+ * row three is the numbers as punched specimen tags. Repo-verified figures are
+ * shown plainly; the second-hand pilot figure is flagged "pending verification"
+ * per docs/CONTENT_NOTES.md's verify-before-publish rule.
  */
 
-/** The product pipeline, laid out left-to-right as five screen specimens. */
-const STAGES: readonly string[] = [
-  "Ingest",
-  "Enrich",
-  "Match",
-  "QC",
-  "Export",
-];
+const CARDS = [
+  { label: "01 · Supplier data", Glyph: SupplierCardGlyph },
+  { label: "02 · Generated listing", Glyph: ListingCardGlyph },
+  { label: "03 · Loadsheet", Glyph: LoadsheetGlyph },
+] as const;
 
-/** The stack, as self-labeling register chips (one labeled specimen tile). */
+/** The stack, laid out as labeled swatch chips. */
 const STACK: readonly string[] = [
   "Fastify",
   "TypeScript",
@@ -57,27 +65,21 @@ const STATS: readonly Stat[] = [
 export function CatalogIQInsert() {
   return (
     <figure className={styles.insert}>
-      {/* The tray: an inset hairline frame holds the whole flat-lay. */}
+      {/* The tray: an inset hairline frame is the surface the objects lie on. */}
       <Plate border="frame" className={styles.tray}>
-        {/* Band 1 — the pipeline, five screen specimens on a strict grid. */}
-        <div className={styles.stages}>
-          {STAGES.map((stage, i) => (
-            <div key={stage} className={styles.item}>
-              <ScreenGlyph className={styles.screen} />
-              <Label className={styles.itemLabel}>
-                {String(i + 1).padStart(2, "0")} · {stage}
-              </Label>
-            </div>
-          ))}
-        </div>
+        {/* Row 1 — the paperwork: raw input, finished output, the export. */}
+        {CARDS.map(({ label, Glyph }) => (
+          <div key={label} className={styles.item}>
+            <Glyph className={styles.card} />
+            <Label className={styles.itemLabel}>{label}</Label>
+          </div>
+        ))}
 
-        {/* Band 2 — the connective diagram, spanning the tray. */}
+        {/* Row 2 — the arranger's tools flank the stack. */}
         <div className={styles.item}>
-          <PipelineGlyph className={styles.pipeline} />
-          <Label className={styles.itemLabel}>Pipeline</Label>
+          <PencilGlyph className={styles.tool} />
+          <Label className={styles.itemLabel}>One pencil</Label>
         </div>
-
-        {/* Band 3 — the stack, one labeled specimen of register chips. */}
         <div className={styles.item}>
           <div className={styles.chips}>
             {STACK.map((tech) => (
@@ -86,25 +88,30 @@ export function CatalogIQInsert() {
               </Label>
             ))}
           </div>
-          <Label className={styles.itemLabel}>Stack</Label>
+          <Label className={styles.itemLabel}>The stack</Label>
+        </div>
+        <div className={styles.item}>
+          <RulerGlyph className={styles.tool} />
+          <Label className={styles.itemLabel}>One ruler</Label>
         </div>
 
-        {/* Band 4 — the numbers, three stat specimens on a strict grid. */}
-        <div className={styles.stats}>
-          {STATS.map((stat) => (
-            <div key={stat.unit} className={styles.stat}>
-              <span className={`register-h2 register-stat ${styles.statValue}`}>
+        {/* Row 3 — the numbers, as punched specimen tags. */}
+        {STATS.map((stat) => (
+          <div key={stat.unit} className={styles.item}>
+            <div className={styles.tag}>
+              <span className={styles.tagHole} aria-hidden="true" />
+              <span className={`register-h3 register-stat ${styles.statValue}`}>
                 {stat.value}
                 {stat.pending ? <span className={styles.dagger}>†</span> : null}
               </span>
               <Label className={styles.itemLabel}>{stat.unit}</Label>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </Plate>
 
       <Caption as="figcaption" figure={1} numeral="roman">
-        CatalogIQ, laid out overhead: the pipeline, the stack, the numbers.
+        CatalogIQ, knolled: the input, the output, the tools, the numbers.
       </Caption>
       <p className={`register-caption ${styles.footnote}`}>
         † Pilot figure is second-hand; pending verification before publish.
