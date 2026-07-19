@@ -13,6 +13,7 @@ import { CHAPTERS } from "@/components/ChapterIndex";
 import { TABLEAUX } from "@/components/tableaux";
 import { toRoman } from "@/lib/numerals";
 
+import { INTERTITLES, Intertitle } from "./Intertitle";
 import styles from "./NavCandidateC.module.css";
 
 /**
@@ -60,6 +61,9 @@ export function NavCandidateC() {
   const [transit, setTransit] = useState<Transit>("truck");
   // Drives the blur pulse during a whip (up now, down at mid-transit).
   const [blurring, setBlurring] = useState(false);
+  // The chapter id whose intertitle plate is currently held over the viewport
+  // (PORT-17), or null when none is showing.
+  const [intertitleId, setIntertitleId] = useState<string | null>(null);
   const last = CHAPTERS.length - 1;
 
   // Refs so callbacks stay stable and closures never read stale state.
@@ -69,6 +73,14 @@ export function NavCandidateC() {
   // Each chapter is its own vertical scroll context; we reset the incoming one
   // to its head on entry so you always arrive at the top of a room.
   const panelsRef = useRef<(HTMLElement | null)[]>([]);
+  // Chapters whose intertitle plate has already been shown — the plate appears
+  // only on the FIRST entry to each chapter (see the entry effect below). A ref,
+  // not state: it must survive StrictMode's dev double-effect without a re-render.
+  const seenRef = useRef<Set<string>>(new Set());
+
+  // Dismiss the intertitle plate — the parent unmounts it (Intertitle calls this
+  // on any input or after its dwell).
+  const dismissIntertitle = useCallback(() => setIntertitleId(null), []);
 
   const clearBlurTimer = useCallback(() => {
     if (blurTimerRef.current !== null) {
@@ -116,6 +128,18 @@ export function NavCandidateC() {
   useEffect(() => {
     const panel = panelsRef.current[index];
     if (panel) panel.scrollTop = 0;
+  }, [index]);
+
+  // Show the intertitle plate the FIRST time each chapter is entered (PORT-17,
+  // fires on mount for the opening chapter too). First-visit-only keeps
+  // back-and-forth nav fast and adds no mandatory wait — whether it should
+  // re-show on return is the walkthrough's rhythm question (see the notes doc).
+  useEffect(() => {
+    const id = CHAPTERS[index].id;
+    if (!seenRef.current.has(id)) {
+      seenRef.current.add(id);
+      setIntertitleId(id);
+    }
   }, [index]);
 
   // Track prefers-reduced-motion so the whip runs without a blur pulse.
@@ -169,6 +193,11 @@ export function NavCandidateC() {
   useEffect(() => clearBlurTimer, [clearBlurTimer]);
 
   const current = CHAPTERS[index];
+  // The chapter the currently-held intertitle introduces (id → chapter), or
+  // undefined when no plate is showing.
+  const intertitle = intertitleId
+    ? CHAPTERS.find((chapter) => chapter.id === intertitleId)
+    : undefined;
 
   return (
     <div className={styles.prototype}>
@@ -230,6 +259,20 @@ export function NavCandidateC() {
         <p className={styles.srStatus} role="status" aria-live="polite">
           Chapter {index + 1} of {CHAPTERS.length}: {current.label}
         </p>
+
+        {/* The intertitle plate (PORT-17): held over the entering chapter, above
+            the track, dismissed on any input or after its dwell. Keyed by chapter
+            id so it remounts (fresh dwell) per chapter. It never blocks the
+            tableau — on dismiss the parent stops rendering it. */}
+        {intertitle ? (
+          <Intertitle
+            key={intertitle.id}
+            kicker={INTERTITLES[intertitle.id].kicker}
+            title={intertitle.label}
+            line={INTERTITLES[intertitle.id].line}
+            onDismiss={dismissIntertitle}
+          />
+        ) : null}
 
         <div
           className={styles.track}
