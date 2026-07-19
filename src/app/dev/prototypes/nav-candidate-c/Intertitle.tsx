@@ -36,7 +36,7 @@ const ENTER_MS = 600;
  * This is the reading window (the fade-in is separate, and any input dismisses
  * sooner). Rough — the right length is a walkthrough question.
  */
-const HOLD_MS = 3000;
+const HOLD_MS = 2400;
 /**
  * Fade-out duration on dismiss. The plate eases away rather than hard-cutting to
  * nothing — a straight cut reads as jarring here. Keep in lockstep with
