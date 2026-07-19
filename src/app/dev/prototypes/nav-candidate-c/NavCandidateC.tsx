@@ -10,7 +10,7 @@ import {
 
 import { Button } from "@/components/Button";
 import { CHAPTERS } from "@/components/ChapterIndex";
-import { Plate } from "@/components/Plate";
+import { TABLEAUX } from "@/components/tableaux";
 import { toRoman } from "@/lib/numerals";
 
 import styles from "./NavCandidateC.module.css";
@@ -38,11 +38,12 @@ import styles from "./NavCandidateC.module.css";
  *
  * Throwaway quality by intent — docs/prototypes/PORT-15-candidate-c.md holds the
  * learnings and the comparative A/B/C notes. It composes the shipped leaves
- * (Button, Plate, the CHAPTERS source of truth, the Roman-numeral helper) over
- * gray-box tableaux with stacked placeholder plates (so the vertical axis has
- * something to scroll), touches no shipped component, and keeps the truck /
- * whip-pan timing in local CSS custom properties rather than global motion
- * tokens (promoting those with parity tests is Phase-3 work).
+ * (Button, the CHAPTERS source of truth, the Roman-numeral helper) and, since
+ * PORT-16, the four rough chapter tableaux (@/components/tableaux) as each
+ * chapter's scrollable body — real draft content over the old gray-box
+ * placeholders. It keeps the truck / whip-pan timing in local CSS custom
+ * properties rather than global motion tokens (promoting those with parity
+ * tests is Phase-3 work).
  */
 
 // Whip-pan duration for distant jumps (Brand Guide: 300–400ms). Mirrors
@@ -236,35 +237,34 @@ export function NavCandidateC() {
           data-blurring={blurring ? true : undefined}
           style={{ "--truck-i": index } as CSSProperties}
         >
-          {CHAPTERS.map((chapter, i) => (
-            <section
-              key={chapter.id}
-              ref={(el) => {
-                panelsRef.current[i] = el;
-              }}
-              className={styles.panel}
-              data-chapter={chapter.id}
-              aria-hidden={i !== index}
-            >
-              {/* The vertical axis: real stacked content so scroll has somewhere
-                  to go. Placeholder plates stand in for a chapter's figures. */}
-              <div className={styles.panelInner}>
-                <p className={`register-kicker ${styles.kicker}`}>
-                  Chapter {toRoman(i + 1)}
-                </p>
-                <h2 className={`register-intertitle ${styles.title}`}>
-                  {chapter.label}
-                </h2>
-                <p className={`register-caption ${styles.scrollHint}`}>
-                  Scroll within this chapter — the vertical axis is native, only
-                  the horizontal (chapter-to-chapter) axis is a branded move.
-                </p>
-                <Plate border="frame" empty className={styles.tableau} />
-                <Plate border="rule" empty className={styles.tableau} />
-                <Plate border="rule" empty className={styles.tableau} />
-              </div>
-            </section>
-          ))}
+          {CHAPTERS.map((chapter, i) => {
+            const Tableau = TABLEAUX[chapter.id];
+            return (
+              <section
+                key={chapter.id}
+                ref={(el) => {
+                  panelsRef.current[i] = el;
+                }}
+                className={styles.panel}
+                data-chapter={chapter.id}
+                aria-hidden={i !== index}
+              >
+                {/* The vertical axis: the chapter's real (rough) tableau, tall
+                    enough that native scroll has somewhere to go (PORT-16). The
+                    kicker + title are the chaptered heading the harness owns;
+                    intertitle plates between chapters are PORT-17. */}
+                <div className={styles.panelInner}>
+                  <p className={`register-kicker ${styles.kicker}`}>
+                    Chapter {toRoman(i + 1)}
+                  </p>
+                  <h2 className={`register-intertitle ${styles.title}`}>
+                    {chapter.label}
+                  </h2>
+                  {Tableau ? <Tableau /> : null}
+                </div>
+              </section>
+            );
+          })}
         </div>
       </div>
     </div>

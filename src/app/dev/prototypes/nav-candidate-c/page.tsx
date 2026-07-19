@@ -25,11 +25,13 @@ export default function NavCandidateCPage() {
         <p className={`register-kicker ${styles.kicker}`}>PORT-15 · Candidate C</p>
         <h1>Hybrid — distance-branched jumps + scroll-within-chapter</h1>
         <p className={styles.lede}>
-          Chapter-to-chapter travel is explicit and branches on distance: an
-          adjacent move trucks (~800ms), a distant jump whip-pans (~350ms, with a
-          brief blur). Scroll is not hijacked — it drives progress{" "}
-          <em>within</em> the current chapter. The chapter index and keyboard are
-          the full horizontal path, so nothing relies on a gesture.
+          The chosen mechanic, now walked end to end with rough draft content in
+          all four chapters (PORT-16). Chapter-to-chapter travel is explicit and
+          branches on distance: an adjacent move trucks (~800ms), a distant jump
+          whip-pans (~350ms, with a brief blur). Scroll is not hijacked — it
+          drives progress <em>within</em> the current chapter. The chapter index
+          and keyboard are the full horizontal path, so nothing relies on a
+          gesture.
         </p>
         <p className={`register-caption ${styles.keys}`}>
           Horizontal (chapters): index / prev-next · <kbd>←</kbd> / <kbd>→</kbd>{" "}

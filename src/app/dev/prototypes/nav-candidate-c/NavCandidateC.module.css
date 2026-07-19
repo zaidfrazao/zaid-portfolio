@@ -172,22 +172,6 @@
   color: var(--color-umber);
 }
 
-.scrollHint {
-  color: var(--color-umber);
-  max-width: var(--measure-prose);
-  text-align: center;
-}
-
-/* Gray-box tableau bodies — empty Plate placeholders stand in for real chapter
-   content (none authored yet). Stacked so the chapter overflows the stage. */
-.tableau {
-  width: min(72ch, 100%);
-  min-height: 32vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 /* Visually-hidden status line (aria-live announces the settled chapter). */
 .srStatus {
   position: absolute;
