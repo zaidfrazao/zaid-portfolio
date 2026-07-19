@@ -42,18 +42,27 @@ Two independent reasons, one per rejected pass:
 
 **Where the zoom landed (walkthrough direction, same day): HOVER PUSH-IN AS
 CAMERA INTEREST.** The push-in becomes a hover effect, specifically *when the
-hover reveals more info*: an element with more to show leans in slightly
-(scale 1.03, 300ms, mechanical ease, no overshoot) and the extra information
-reveals with it. The reveal is the point — the lean without new information
-would be decoration. It pairs with the cut: **hover leans toward the doorway;
-click cuts through it.** Prototyped rough in the harness as the entry
-"doorway plate" (label + revealed contents line); the reveal text stays in
-the DOM at rest (content parity for SRs), keyboard gets it via
-`:focus-visible`, and reduced motion keeps the reveal (instant) but drops the
-lean entirely — a travel-less 1.03 jump is noise. A further candidate use:
-pushing into a real photograph (insert specimen → gallery, per the PORT-18
-production direction) — detail-revealing, so the same "zoom must reveal"
-rule holds.
+hover reveals more info* — and it must be the **camera**, not the element. A
+first pass that scaled the element itself (1.03) was rejected on sight: "just
+the button… getting a bit bigger" — a self-growing element is a card hover,
+not a camera. The treatment that reads: while the cursor (or keyboard focus)
+rests on the doorway plate, the **whole panel scales (1.06, 300ms, mechanical
+ease, no overshoot) about the plate's measured on-screen position** — the
+surroundings slide outward past the frame edges, the target comes toward you —
+while the plate's contents line reveals in step. The reveal is the point; the
+lean without new information would be decoration. It pairs with the cut:
+**hover leans toward the doorway; click cuts through it** (the lean releases
+at the cut — the camera doesn't stay committed under the set).
+
+Mechanics proven here that the engine inherits: the origin is *aimed* live
+(`getBoundingClientRect` of target vs. panel at hover start → `--lean-x/y` in
+%) — the same "aim the camera" requirement the v2 transition flagged, now
+actually implemented; the reveal text stays in the DOM at rest (content parity
+for SRs), keyboard gets lean + reveal via focus; reduced motion keeps the
+reveal (instant) and drops the lean entirely — a travel-less scale jump is
+noise. A further candidate use: pushing into a real photograph (insert
+specimen → gallery, per the PORT-18 production direction) — detail-revealing,
+so the same "zoom must reveal" rule holds.
 
 **Brand Guide impact (two rows now):** the motion table row "Push-in ·
 900–1200ms · Entering a project/case study" is contradicted (depth entry is a
@@ -162,10 +171,14 @@ the production dev gallery.*
 - **The bare cut is undressed.** v3 is a hard cut with no staging. If the
   walkthrough finds it too abrupt, the candidate dressing is the intertitle
   treatment (a brief held plate, like chapter entries) — *not* motion.
-- **The hover-lean values are felt, not measured** — 1.03 / 300ms are first
-  guesses; the lean must read as interest, not a bounce-adjacent card
-  hover (the thing the Brand Guide's "no scale" rule was defending against).
-  The rule that keeps it honest: no lean without a reveal.
+- **The hover-lean values are felt, not measured** — 1.06 / 300ms are first
+  guesses; the lean must read as interest, not restlessness. The rules that
+  keep it honest: the camera moves, never the element alone; and no lean
+  without a reveal.
+- **Lean origin is measured once, at hover start** — scrolling the panel
+  while leaning would leave the origin stale; harmless in practice (scroll
+  usually breaks hover), but the engine should re-aim on scroll if this
+  treatment lands on in-flow plates.
 - **Hover doesn't exist on touch** — the doorway plate's reveal needs a
   mobile answer (always-revealed contents line, or reveal on first tap);
   unexamined here.

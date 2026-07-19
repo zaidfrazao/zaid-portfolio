@@ -101,6 +101,11 @@ export function NavCandidateC() {
   const [intertitleId, setIntertitleId] = useState<string | null>(null);
   // The depth axis (PORT-19): a straight cut in, a straight cut out.
   const [depth, setDepth] = useState<Depth>("tableau");
+  // The hover lean (PORT-19): while the cursor (or keyboard focus) rests on
+  // the doorway plate, the CAMERA pushes toward it — the whole Projects panel
+  // scales about the plate's measured on-screen position. Null = camera at
+  // rest. {x, y} are the transform-origin in % of the panel's visible box.
+  const [lean, setLean] = useState<{ x: number; y: number } | null>(null);
   // Manual instant-cut preview (the AC's reduced-motion fallback demo) — ORed
   // with the OS prefers-reduced-motion setting everywhere motion branches.
   const [manualReduced, setManualReduced] = useState(false);
@@ -149,12 +154,39 @@ export function NavCandidateC() {
     [],
   );
 
+  // Aim the camera at the doorway plate and lean in: measure the plate's
+  // center within the panel's visible box (both live rects, so panel scroll is
+  // accounted for) and store it as the transform-origin. This is the "the
+  // engine must aim the camera" requirement, prototyped: the push is always
+  // toward the thing under the cursor, never a fixed viewport point.
+  const beginLean = useCallback(() => {
+    const plate = enterButtonRef.current;
+    const panel = plate?.closest('[data-chapter="projects"]');
+    if (!plate || !panel) return;
+    const plateRect = plate.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    setLean({
+      x:
+        ((plateRect.left + plateRect.width / 2 - panelRect.left) /
+          panelRect.width) *
+        100,
+      y:
+        ((plateRect.top + plateRect.height / 2 - panelRect.top) /
+          panelRect.height) *
+        100,
+    });
+  }, []);
+
+  const endLean = useCallback(() => setLean(null), []);
+
   // Enter: a straight cut — the set mounts already settled, opening on the
   // insert (the match cut). No motion, so reduced-motion needs no branch here.
+  // The lean is released: the camera doesn't stay committed under the set.
   const enterCase = useCallback(() => {
     if (depthRef.current !== "tableau") return;
     depthRef.current = "case";
     setDepth("case");
+    setLean(null);
   }, []);
 
   // Exit: the mirror cut. Focus returns to the entry trigger via the depth
@@ -415,6 +447,18 @@ export function NavCandidateC() {
                 }}
                 className={styles.panel}
                 data-chapter={chapter.id}
+                // The hover lean (PORT-19): the camera pushes toward the
+                // doorway plate — the PANEL scales about the plate's measured
+                // position (see beginLean), the plate itself doesn't grow.
+                data-lean={isProjects && lean ? true : undefined}
+                style={
+                  isProjects && lean
+                    ? ({
+                        "--lean-x": `${lean.x}%`,
+                        "--lean-y": `${lean.y}%`,
+                      } as CSSProperties)
+                    : undefined
+                }
                 aria-hidden={i !== index}
               >
                 {/* The vertical axis: the chapter's real (rough) tableau, tall
@@ -432,18 +476,24 @@ export function NavCandidateC() {
                   {isProjects ? (
                     // PORT-19: the explicit entry into depth — a harness-owned
                     // "doorway plate". This is where the zoom finally lives
-                    // (walkthrough direction): HOVER push-in as camera
-                    // interest — the plate leans in slightly and REVEALS more
-                    // info (what's inside the case study). Hover leans toward
-                    // the doorway; click cuts through it. The reveal text is
-                    // always in the DOM (content parity for SRs; keyboard gets
-                    // it via :focus-visible). Production wants this treatment
-                    // on the CatalogIQ plate itself (see the notes doc).
+                    // (walkthrough direction): hover push-in as CAMERA
+                    // interest — the camera (the whole panel) pushes toward
+                    // the plate while its contents line REVEALS. The plate
+                    // itself never grows alone — that read as a card hover,
+                    // not a camera. Hover leans toward the doorway; click cuts
+                    // through it. The reveal text is always in the DOM
+                    // (content parity for SRs; keyboard gets lean + reveal via
+                    // focus). Production wants this treatment on the CatalogIQ
+                    // plate itself (see the notes doc).
                     <button
                       type="button"
                       ref={enterButtonRef}
                       className={styles.entryPlate}
                       onClick={enterCase}
+                      onPointerEnter={beginLean}
+                      onPointerLeave={endLean}
+                      onFocus={beginLean}
+                      onBlur={endLean}
                     >
                       <span className="register-label">
                         Enter the case study →

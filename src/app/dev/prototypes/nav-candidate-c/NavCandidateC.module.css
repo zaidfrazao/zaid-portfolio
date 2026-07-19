@@ -27,10 +27,16 @@
   --whip-blur: 5px;
   --whip-blur-ramp: 175ms;
 
-  /* NOTE (PORT-19): there are deliberately NO push/zoom properties here. The
-     walkthrough rejected zoom in any transition role — depth entry/exit is a
-     straight cut (see .panel and the notes doc); the zoom idea is reserved
-     for a future non-transition use. */
+  /* The hover lean (PORT-19) — the zoom's home after the walkthrough: not a
+     transition (depth entry/exit is a straight cut — see the notes doc), but
+     CAMERA INTEREST on hover. While the cursor/focus rests on the doorway
+     plate, the whole Projects panel scales about the plate's measured
+     position (aimed in JS via --lean-x/--lean-y): the surroundings slide
+     outward, the plate comes toward you. A lean, not a lunge — mechanical
+     ease, no overshoot; felt values for the walkthrough. */
+  --lean-scale: 1.06;
+  --lean-ms: 300ms;
+  --lean-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
 
   display: flex;
   flex-direction: column;
@@ -133,17 +139,25 @@
 /* Each panel is its own NATIVE vertical scroll context — this is the hybrid's
    vertical axis. Horizontal is clipped so the panel never scrolls sideways.
 
-   PORT-19: the panel does NOT transform for depth entry. Both zoom treatments
-   (crossfade, then push-then-cut) were rejected at the walkthrough — a dolly
-   on flat DOM reads as page magnification, not camera travel. Entering the
-   case study is a straight cut: the opaque set (CaseStudy.module.css) mounts
-   over this panel, and the exit cut unmounts it. */
+   PORT-19: the panel never transforms as a TRANSITION — both zoom-transition
+   treatments (crossfade, then push-then-cut) were rejected at the walkthrough;
+   depth entry is a straight cut (the opaque set mounts over this panel). The
+   only transform is the HOVER LEAN below: while the doorway plate is
+   hovered/focused, the camera pushes toward it — origin aimed at the plate's
+   measured position via --lean-x/--lean-y (inline, from JS), so the push is
+   always toward the thing under the cursor. */
 .panel {
   flex: 0 0 100%;
   width: 100%;
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  transition: transform var(--lean-ms) var(--lean-ease);
+}
+
+.panel[data-lean] {
+  transform: scale(var(--lean-scale));
+  transform-origin: var(--lean-x, 50%) var(--lean-y, 50%);
 }
 
 /* Faint per-chapter washes so a move reads as travel between distinct rooms.
@@ -165,21 +179,14 @@
   background: color-mix(in srgb, var(--color-paper) 92%, var(--color-sepia));
 }
 
-/* The entry "doorway plate" (PORT-19) — where the zoom lives after the
-   walkthrough: HOVER PUSH-IN AS CAMERA INTEREST. When the cursor (or
-   :focus-visible) rests on an element that has more to show, it leans in
-   slightly and the extra info reveals; the reveal is the point — the scale
-   without new information would be decoration. Click then cuts through the
-   doorway. NOTE: this deliberately amends the Brand Guide hover rule
-   ("no scale") for the reveal case — flagged for the /fra:update-brand pass.
-
-   Timing sits between micro-UI (120–180ms) and the old push band: a lean, not
-   a lunge — mechanical ease, no overshoot, felt values for the walkthrough. */
+/* The entry "doorway plate" (PORT-19). The plate itself does NOT scale — a
+   self-growing element read as a card hover, not a camera (walkthrough). The
+   camera move is on the PANEL (see .panel[data-lean]); the plate's own job is
+   the REVEAL: hover/focus shows what's inside. The reveal is the point — the
+   lean without new information would be decoration. Click then cuts through
+   the doorway. NOTE: the lean amends the Brand Guide hover rule ("no scale")
+   for the reveal case — flagged for the /fra:update-brand pass. */
 .entryPlate {
-  --hover-push-scale: 1.03;
-  --hover-push-ms: 300ms;
-  --hover-push-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
-
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -189,24 +196,19 @@
   border: var(--frame-line-width) solid var(--color-rule);
   color: var(--color-umber);
   cursor: pointer;
-  transition: transform var(--hover-push-ms) var(--hover-push-ease);
-}
-
-.entryPlate:hover,
-.entryPlate:focus-visible {
-  transform: scale(var(--hover-push-scale));
 }
 
 /* The revealed line: collapsed at rest via the 0fr→1fr grid trick (animatable
-   height without magic numbers), opened by hover/focus-visible. The text is
-   always in the DOM — the reveal is visual staging, not conditional content. */
+   height without magic numbers), opened by hover/focus-visible in step with
+   the camera lean. The text is always in the DOM — the reveal is visual
+   staging, not conditional content. */
 .entryReveal {
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
   transition:
-    grid-template-rows var(--hover-push-ms) var(--hover-push-ease),
-    opacity var(--hover-push-ms) var(--hover-push-ease);
+    grid-template-rows var(--lean-ms) var(--lean-ease),
+    opacity var(--lean-ms) var(--lean-ease);
 }
 
 .entryReveal > span {
@@ -267,16 +269,18 @@
     transition: none;
   }
 
-  /* The doorway plate keeps the REVEAL (content, instant) but drops the lean
-     (motion). A sudden 1.03 jump is travel-less noise, so no scale at all. */
-  .entryPlate,
-  .entryReveal {
+  /* The doorway keeps the REVEAL (content, instant) but drops the camera
+     lean (motion). A travel-less scale jump is noise, so no transform at all. */
+  .panel {
     transition: none;
   }
 
-  .entryPlate:hover,
-  .entryPlate:focus-visible {
+  .panel[data-lean] {
     transform: none;
+  }
+
+  .entryReveal {
+    transition: none;
   }
 }
 
@@ -288,12 +292,14 @@
   filter: none;
 }
 
-.prototype[data-reduced] .entryPlate,
-.prototype[data-reduced] .entryReveal {
+.prototype[data-reduced] .panel {
   transition: none;
 }
 
-.prototype[data-reduced] .entryPlate:hover,
-.prototype[data-reduced] .entryPlate:focus-visible {
+.prototype[data-reduced] .panel[data-lean] {
   transform: none;
+}
+
+.prototype[data-reduced] .entryReveal {
+  transition: none;
 }
