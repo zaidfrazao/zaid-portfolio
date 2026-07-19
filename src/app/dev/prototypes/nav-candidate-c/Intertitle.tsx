@@ -25,8 +25,18 @@ import styles from "./Intertitle.module.css";
  * keyboard chapter-nav keeps working through it.
  */
 
-/** How long the plate holds, fully settled, before it starts to leave (rough). */
-const DWELL_MS = 1400;
+/**
+ * Fade-in duration. Mirrors `--enter-ms` in Intertitle.module.css; used here so
+ * the auto-dismiss hold counts from when the plate is fully settled, not from
+ * mount (otherwise the fade-in eats into the reading time).
+ */
+const ENTER_MS = 600;
+/**
+ * How long the plate holds fully settled and readable before it starts to leave.
+ * This is the reading window (the fade-in is separate, and any input dismisses
+ * sooner). Rough — the right length is a walkthrough question.
+ */
+const HOLD_MS = 2400;
 /**
  * Fade-out duration on dismiss. The plate eases away rather than hard-cutting to
  * nothing — a straight cut reads as jarring here. Keep in lockstep with
@@ -121,8 +131,9 @@ export function Intertitle({ kicker, title, line, onDismiss }: IntertitleProps) 
 
     // Any input skips the plate (PRD Feature 2). Listeners only begin the exit —
     // no preventDefault — so an ArrowRight still navigates and the first scroll
-    // gesture still reaches the panel underneath.
-    const dwellTimer = window.setTimeout(beginExit, DWELL_MS);
+    // gesture still reaches the panel underneath. The auto-dismiss fires after
+    // the fade-in plus the settled hold, so the reading window is the full HOLD.
+    const dwellTimer = window.setTimeout(beginExit, ENTER_MS + HOLD_MS);
     window.addEventListener("pointerdown", beginExit);
     window.addEventListener("keydown", beginExit);
     window.addEventListener("wheel", beginExit, { passive: true });
