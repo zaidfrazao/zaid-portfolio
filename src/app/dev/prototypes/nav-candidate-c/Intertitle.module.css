@@ -1,0 +1,69 @@
+/*
+ * Intertitle — PORT-17 spike styles (throwaway; the rhythm/tone notes are the
+ * deliverable). Token-only per project convention: no literal inks.
+ *
+ * A Teal plate held over the entering chapter (Brand Guide: Sienna and Teal are
+ * inks, not floods — a large Teal field is reserved for exactly this, the
+ * intertitle plate). Flat, sharp-cornered, no shadow (Hard Rule 6 — our own
+ * plate system, not the Tenenbaums Futura title card). Paper text on Teal is
+ * the 5.90:1 pairing already verified in palette.contrast.test.ts.
+ */
+
+.plate {
+  /* Anchored to .viewport (already position: relative) — scoped to the
+     prototype frame, not the whole screen. Above the track; below nothing. */
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-8);
+  text-align: center;
+
+  background: var(--color-teal);
+  /* A hairline Paper frame set in from the edge — echoes the plate frame-line
+     grammar (Brand Guide: Cards & Containers) in the ink that reads on Teal. */
+  outline: var(--frame-line-width) solid var(--color-paper);
+  outline-offset: calc(-1 * var(--frame-line-inset));
+
+  /* Enter as a quick resolve, then hold perfectly still until dismissed
+     (Hard Rule 2: resting states are fully static — no ambient motion). */
+  animation: intertitle-in 220ms ease-out both;
+}
+
+.kicker {
+  color: var(--color-paper);
+  opacity: 0.85;
+}
+
+.title {
+  color: var(--color-paper);
+}
+
+.line {
+  /* The narrator's "In which…" line — body-scale, Paper, understated. */
+  max-width: 48ch;
+  color: var(--color-paper);
+  opacity: 0.9;
+}
+
+@keyframes intertitle-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* prefers-reduced-motion: the plate is a straight cut — instant, no fade
+   (Brand Guide hard rule; content parity is total). */
+@media (prefers-reduced-motion: reduce) {
+  .plate {
+    animation: none;
+  }
+}
