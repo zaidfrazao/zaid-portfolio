@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   type CSSProperties,
 } from "react";
 
@@ -13,6 +14,7 @@ import { CHAPTERS } from "@/components/ChapterIndex";
 import { TABLEAUX } from "@/components/tableaux";
 import { toRoman } from "@/lib/numerals";
 
+import { CaseStudy } from "./CaseStudy";
 import { INTERTITLES, Intertitle } from "./Intertitle";
 import styles from "./NavCandidateC.module.css";
 
@@ -37,6 +39,18 @@ import styles from "./NavCandidateC.module.css";
  *    axis is NATIVE scroll WITHIN a chapter. Scroll does the vertical thing the
  *    body expects, so there is nothing to hijack and no mobile pitfall.
  *
+ * Since PORT-19 the harness also carries a DEPTH axis, orthogonal to chapter
+ * travel: an explicit "Enter the case study" control on the Projects chapter
+ * enters the CatalogIQ set (./CaseStudy) as a STRAIGHT CUT that lands on the
+ * insert (a match cut on the object), and Esc / "Back to Projects" cuts back.
+ * The walkthrough rejected zoom in ANY transition role: v1's zoom-crossfade
+ * read as a transition effect, and v2's push-then-cut still read as "zoom on
+ * nothing" — a dolly on flat DOM is magnification, not camera travel. The
+ * zoom idea is reserved for a future non-transition use; entry/exit are cuts
+ * (docs/prototypes/PORT-19-push-in-entry.md holds the verdicts). Chapter
+ * travel while deep cuts the depth axis closed first. A harness chrome toggle
+ * previews the reduced-motion instant cut (truck/whip) without OS settings.
+ *
  * Throwaway quality by intent — docs/prototypes/PORT-15-candidate-c.md holds the
  * learnings and the comparative A/B/C notes. It composes the shipped leaves
  * (Button, the CHAPTERS source of truth, the Roman-numeral helper) and, since
@@ -55,6 +69,27 @@ const DISTANT = 2;
 
 type Transit = "truck" | "whip";
 
+/**
+ * The depth axis (PORT-19), orthogonal to chapter travel: at the chapter
+ * surface, or inside the case-study set. Both directions are straight cuts,
+ * so there is no in-flight state.
+ */
+type Depth = "tableau" | "case";
+
+// prefers-reduced-motion as an external store (render-time consumers: the
+// CaseStudy layer's focus timing and the motion-toggle label; reducedRef
+// mirrors it for stable callbacks).
+const REDUCED_MQ = "(prefers-reduced-motion: reduce)";
+
+function subscribeReducedMotion(onStoreChange: () => void) {
+  const mq = window.matchMedia(REDUCED_MQ);
+  mq.addEventListener("change", onStoreChange);
+  return () => mq.removeEventListener("change", onStoreChange);
+}
+
+const getReducedMotion = () => window.matchMedia(REDUCED_MQ).matches;
+const getReducedMotionServer = () => false;
+
 export function NavCandidateC() {
   const [index, setIndex] = useState(0);
   // How the LAST move travelled, so CSS can pick truck vs whip timing/easing.
@@ -64,6 +99,22 @@ export function NavCandidateC() {
   // The chapter id whose intertitle plate is currently held over the viewport
   // (PORT-17), or null when none is showing.
   const [intertitleId, setIntertitleId] = useState<string | null>(null);
+  // The depth axis (PORT-19): a straight cut in, a straight cut out.
+  const [depth, setDepth] = useState<Depth>("tableau");
+  // The hover lean (PORT-19): while the cursor (or keyboard focus) rests on
+  // the doorway plate, the CAMERA pushes toward it — the whole Projects panel
+  // scales about the plate's measured on-screen position. Null = camera at
+  // rest. {x, y} are the transform-origin in % of the panel's visible box.
+  const [lean, setLean] = useState<{ x: number; y: number } | null>(null);
+  // Manual instant-cut preview (the AC's reduced-motion fallback demo) — ORed
+  // with the OS prefers-reduced-motion setting everywhere motion branches.
+  const [manualReduced, setManualReduced] = useState(false);
+  // OS reduced-motion, subscribed as an external store (see module scope).
+  const osReduced = useSyncExternalStore(
+    subscribeReducedMotion,
+    getReducedMotion,
+    getReducedMotionServer,
+  );
   const last = CHAPTERS.length - 1;
 
   // Refs so callbacks stay stable and closures never read stale state.
@@ -77,6 +128,14 @@ export function NavCandidateC() {
   // only on the FIRST entry to each chapter (see the entry effect below). A ref,
   // not state: it must survive StrictMode's dev double-effect without a re-render.
   const seenRef = useRef<Set<string>>(new Set());
+  // Depth-axis refs (PORT-19): the current depth for stable callbacks, the
+  // entry trigger for focus return, and whether that return is owed (explicit
+  // exit only — a chapter-move cut keeps focus on the nav control that caused
+  // it).
+  const depthRef = useRef<Depth>("tableau");
+  const enterButtonRef = useRef<HTMLButtonElement | null>(null);
+  const returnFocusRef = useRef(false);
+  const manualReducedRef = useRef(false);
 
   // Dismiss the intertitle plate — the parent unmounts it (Intertitle calls this
   // on any input or after its dwell).
@@ -89,8 +148,68 @@ export function NavCandidateC() {
     }
   }, []);
 
+  // Effective reduced-motion: the OS setting OR the manual preview toggle.
+  const isReduced = useCallback(
+    () => reducedRef.current || manualReducedRef.current,
+    [],
+  );
+
+  // Aim the camera at the doorway plate and lean in: measure the plate's
+  // center within the panel's visible box (both live rects, so panel scroll is
+  // accounted for) and store it as the transform-origin. This is the "the
+  // engine must aim the camera" requirement, prototyped: the push is always
+  // toward the thing under the cursor, never a fixed viewport point.
+  const beginLean = useCallback(() => {
+    const plate = enterButtonRef.current;
+    const panel = plate?.closest('[data-chapter="projects"]');
+    if (!plate || !panel) return;
+    const plateRect = plate.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    setLean({
+      x:
+        ((plateRect.left + plateRect.width / 2 - panelRect.left) /
+          panelRect.width) *
+        100,
+      y:
+        ((plateRect.top + plateRect.height / 2 - panelRect.top) /
+          panelRect.height) *
+        100,
+    });
+  }, []);
+
+  const endLean = useCallback(() => setLean(null), []);
+
+  // Enter: a straight cut — the set mounts already settled, opening on the
+  // insert (the match cut). No motion, so reduced-motion needs no branch here.
+  // The lean is released: the camera doesn't stay committed under the set.
+  const enterCase = useCallback(() => {
+    if (depthRef.current !== "tableau") return;
+    depthRef.current = "case";
+    setDepth("case");
+    setLean(null);
+  }, []);
+
+  // Exit: the mirror cut. Focus returns to the entry trigger via the depth
+  // effect below — it can't be focused here, the track is still inert until
+  // the re-render.
+  const exitCase = useCallback(() => {
+    if (depthRef.current === "tableau") return;
+    depthRef.current = "tableau";
+    setDepth("tableau");
+    returnFocusRef.current = true;
+  }, []);
+
   const goTo = useCallback(
     (target: number) => {
+      // Depth is orthogonal to chapter travel: any chapter move first cuts the
+      // depth axis closed, so the truck/whip starts from the tableau. Whether
+      // it should block instead is a rhythm question for the walkthrough; see
+      // the PORT-19 notes doc.
+      if (depthRef.current !== "tableau") {
+        depthRef.current = "tableau";
+        setDepth("tableau");
+      }
+
       const current = indexRef.current;
       // Clamp instead of wrapping: truck and whip both run on rails and never
       // overshoot their ends (Brand Guide hard rule), so boundaries are hard stops.
@@ -106,7 +225,7 @@ export function NavCandidateC() {
       // filter transitions up now and back down at mid-transit (see the CSS ramp),
       // so it reads as motion blur that resolves as the frame settles.
       clearBlurTimer();
-      if (mode === "whip" && !reducedRef.current) {
+      if (mode === "whip" && !isReduced()) {
         setBlurring(true);
         blurTimerRef.current = window.setTimeout(
           () => setBlurring(false),
@@ -116,7 +235,7 @@ export function NavCandidateC() {
         setBlurring(false);
       }
     },
-    [clearBlurTimer, last],
+    [clearBlurTimer, isReduced, last],
   );
 
   // Keep the ref the stable callbacks read in sync with rendered state.
@@ -142,16 +261,26 @@ export function NavCandidateC() {
     }
   }, [index]);
 
-  // Track prefers-reduced-motion so the whip runs without a blur pulse.
+  // Mirror the subscribed OS reduced-motion value into the ref that stable
+  // callbacks read (the whip's blur pulse, the push-in's cut branch).
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    reducedRef.current = mq.matches;
-    const onChange = () => {
-      reducedRef.current = mq.matches;
-    };
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
+    reducedRef.current = osReduced;
+  }, [osReduced]);
+
+  // Keep the manual instant-cut toggle readable from stable callbacks.
+  useEffect(() => {
+    manualReducedRef.current = manualReduced;
+  }, [manualReduced]);
+
+  // Return focus to the entry trigger after an explicit exit. Runs post-render
+  // so the track's inert flag is already off — calling focus() inside exitCase
+  // would silently fail against a still-inert subtree.
+  useEffect(() => {
+    if (depth === "tableau" && returnFocusRef.current) {
+      returnFocusRef.current = false;
+      enterButtonRef.current?.focus();
+    }
+  }, [depth]);
 
   // Keyboard — the mandatory non-scroll path, identical to A and B so the three
   // candidates compare head-to-head. Arrows step (adjacent → truck); Home/End
@@ -180,6 +309,11 @@ export function NavCandidateC() {
           event.preventDefault();
           goTo(last);
           break;
+        case "Escape":
+          // The depth axis's keyboard exit (PORT-19). exitCase no-ops when the
+          // case study isn't open, so no guard needed here.
+          exitCase();
+          break;
         default:
           break;
       }
@@ -187,7 +321,7 @@ export function NavCandidateC() {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [goTo, last]);
+  }, [exitCase, goTo, last]);
 
   // Clear a pending blur timer on unmount.
   useEffect(() => clearBlurTimer, [clearBlurTimer]);
@@ -200,7 +334,10 @@ export function NavCandidateC() {
     : undefined;
 
   return (
-    <div className={styles.prototype}>
+    <div
+      className={styles.prototype}
+      data-reduced={manualReduced ? true : undefined}
+    >
       {/* Controls: the rough chapter index + prev/next — the discoverable,
           hijack-free horizontal path (candidate A's model). Buttons, not
           anchors: this spike changes local state rather than routing. */}
@@ -243,6 +380,18 @@ export function NavCandidateC() {
           >
             Next →
           </Button>
+          {/* PORT-19: preview the reduced-motion instant cut without flipping
+              OS settings — for the walkthrough's side-by-side judgment. Applies
+              to the moving moves (truck, whip; depth is already a cut), like
+              the real setting. When the OS already asks for reduced motion,
+              that wins and this reads so. */}
+          <Button
+            variant="secondary"
+            onClick={() => setManualReduced((value) => !value)}
+            aria-pressed={manualReduced}
+          >
+            Motion: {osReduced || manualReduced ? "instant cut" : "full"}
+          </Button>
         </div>
       </div>
 
@@ -254,10 +403,13 @@ export function NavCandidateC() {
         data-transit={transit}
         data-blurring={blurring ? true : undefined}
       >
-        {/* aria-live announces the settled chapter for keyboard/SR users. Focus
-            management on chapter change is a known gap — see the notes. */}
+        {/* aria-live announces the settled chapter for keyboard/SR users — and,
+            since PORT-19, the depth state too. Focus management on chapter
+            change is a known gap — see the notes. */}
         <p className={styles.srStatus} role="status" aria-live="polite">
-          Chapter {index + 1} of {CHAPTERS.length}: {current.label}
+          {depth === "case"
+            ? "Case study: CatalogIQ, within chapter 3, Projects."
+            : `Chapter ${index + 1} of ${CHAPTERS.length}: ${current.label}`}
         </p>
 
         {/* The intertitle plate (PORT-17): held over the entering chapter, above
@@ -274,14 +426,19 @@ export function NavCandidateC() {
           />
         ) : null}
 
+        {/* inert while inside the set (PORT-19): the tableau beneath the
+            opaque overlay must not stay tabbable/readable. Released at the
+            exit cut. */}
         <div
           className={styles.track}
           data-transit={transit}
           data-blurring={blurring ? true : undefined}
+          inert={depth === "case" || undefined}
           style={{ "--truck-i": index } as CSSProperties}
         >
           {CHAPTERS.map((chapter, i) => {
             const Tableau = TABLEAUX[chapter.id];
+            const isProjects = chapter.id === "projects";
             return (
               <section
                 key={chapter.id}
@@ -290,6 +447,18 @@ export function NavCandidateC() {
                 }}
                 className={styles.panel}
                 data-chapter={chapter.id}
+                // The hover lean (PORT-19): the camera pushes toward the
+                // doorway plate — the PANEL scales about the plate's measured
+                // position (see beginLean), the plate itself doesn't grow.
+                data-lean={isProjects && lean ? true : undefined}
+                style={
+                  isProjects && lean
+                    ? ({
+                        "--lean-x": `${lean.x}%`,
+                        "--lean-y": `${lean.y}%`,
+                      } as CSSProperties)
+                    : undefined
+                }
                 aria-hidden={i !== index}
               >
                 {/* The vertical axis: the chapter's real (rough) tableau, tall
@@ -304,11 +473,51 @@ export function NavCandidateC() {
                     {chapter.label}
                   </h2>
                   {Tableau ? <Tableau /> : null}
+                  {isProjects ? (
+                    // PORT-19: the explicit entry into depth — a harness-owned
+                    // "doorway plate". This is where the zoom finally lives
+                    // (walkthrough direction): hover push-in as CAMERA
+                    // interest — the camera (the whole panel) pushes toward
+                    // the plate while its contents line REVEALS. The plate
+                    // itself never grows alone — that read as a card hover,
+                    // not a camera. Hover leans toward the doorway; click cuts
+                    // through it. The reveal text is always in the DOM
+                    // (content parity for SRs; keyboard gets lean + reveal via
+                    // focus). Production wants this treatment on the CatalogIQ
+                    // plate itself (see the notes doc).
+                    <button
+                      type="button"
+                      ref={enterButtonRef}
+                      className={styles.entryPlate}
+                      onClick={enterCase}
+                      onPointerEnter={beginLean}
+                      onPointerLeave={endLean}
+                      onFocus={beginLean}
+                      onBlur={endLean}
+                    >
+                      <span className="register-label">
+                        Enter the case study →
+                      </span>
+                      <span className={styles.entryReveal}>
+                        <span
+                          className={`register-caption ${styles.entryRevealLine}`}
+                        >
+                          Inside: the problem, the build, the numbers —
+                          Figs. I–III.
+                        </span>
+                      </span>
+                    </button>
+                  ) : null}
                 </div>
               </section>
             );
           })}
         </div>
+
+        {/* The case-study set (PORT-19), layered over the track: mounting IS
+            the entry cut (fresh per entry, so it always opens at its head —
+            on the insert); unmounting is the exit cut. */}
+        {depth === "case" ? <CaseStudy onExit={exitCase} /> : null}
       </div>
     </div>
   );

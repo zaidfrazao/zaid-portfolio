@@ -1,0 +1,69 @@
+/*
+ * CaseStudy — PORT-19 spike styles (throwaway; the notes doc is the
+ * deliverable). Token-only per project convention.
+ *
+ * THIS LAYER DOES NOT ANIMATE (walkthrough verdict, 2026-07-19): the push-in
+ * is emphasis WITHIN the Projects scene — the panel scales toward the anchor
+ * plate (NavCandidateC.module.css → .panel[data-depth]) — and the scene
+ * change is a CUT. The set appears at the cut fully settled: opaque, scale 1,
+ * no transition. Zoom-as-transition (the v1 two-layer crossfade) was rejected
+ * as reading like a transition effect rather than camera grammar.
+ */
+
+.set {
+  position: absolute;
+  inset: 0;
+  /* Above the .track (auto), below the intertitle plate (z-index: 2). */
+  z-index: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Opaque ground: inside the set, the chapter wash is gone — you are in a
+     different room, on the Paper ground the insert was designed against. */
+  background: var(--color-paper);
+}
+
+/* The scrollable column of set content — same shape as the harness panelInner,
+   so the set feels like a room in the same building. */
+.setInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-8);
+}
+
+.backRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  align-self: flex-start;
+}
+
+.escHint {
+  color: var(--color-sepia);
+}
+
+.kicker {
+  color: var(--color-sepia);
+}
+
+.title {
+  color: var(--color-umber);
+}
+
+/* The heading takes focus programmatically at the cut (tabIndex={-1}); the
+   ring would read as a click target on a non-interactive element. */
+.title:focus {
+  outline: none;
+}
+
+.line {
+  color: var(--color-sepia);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
