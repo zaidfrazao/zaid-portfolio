@@ -5,42 +5,40 @@ import { Plate } from "@/components/Plate";
 import {
   ListingCardGlyph,
   LoadsheetGlyph,
-  PencilGlyph,
-  RulerGlyph,
+  PhotoPrintGlyph,
   SupplierCardGlyph,
 } from "./insert-art";
 import styles from "./CatalogIQInsert.module.css";
 
 /**
- * CatalogIQInsert — a rough overhead "insert" for CatalogIQ (PORT-18 spike,
- * second pass): a knolled flat-lay of the project's artifacts on a strict grid
- * with equal gutters, every item labeled (Brand Guide → Knolling; grammar #7 —
- * overhead inserts; PRD Feature 3).
+ * CatalogIQInsert — a rough overhead "insert" for CatalogIQ (PORT-18 spike):
+ * a knolled flat-lay of the project's artifacts on a strict grid with equal
+ * gutters, every item labeled (Brand Guide → Knolling; grammar #7 — overhead
+ * inserts; PRD Feature 3).
  *
- * The first pass arranged uniform UI tiles in bands and read as a generic
- * summary — the finding (docs/prototypes/PORT-18-catalogiq-insert.md) is that
- * the overhead read comes from *object silhouettes on a surface*, not from a
- * grid alone. So this pass lays real-shaped objects on the tray, one 3×3 master
- * grid, symmetric about the centreline:
+ * Two findings shape this pass (docs/prototypes/PORT-18-catalogiq-insert.md):
+ * the overhead read comes from *object silhouettes on a surface* (the first
+ * pass's uniform UI tiles read as a summary), and a homogeneous grid of equal
+ * cells reads as a table — so the tray is a bento: one 6-column master grid,
+ * mixed footprints on one gutter rhythm, roughly mirrored about the centreline:
  *
- *   supplier card   ·  generated listing  ·  loadsheet stack
- *   one pencil      ·  the stack, chips   ·  one ruler
- *   tag: LOC        ·  tag: commits       ·  tag: listings
+ *   supplier (2c)      │ listing (2c,     │ loadsheet (2c)
+ *   tag LOC │ tag 428  │  2 rows, hero)   │ photo │ tag 15k†
+ *   ───────────── the stack, swatch rail (6c) ─────────────
  *
- * Row one is the product story as before/after paperwork; row two is the
- * arranger's tools flanking the stack (deadpan-labeled like everything else);
- * row three is the numbers as punched specimen tags. Repo-verified figures are
- * shown plainly; the second-hand pilot figure is flagged "pending verification"
- * per docs/CONTENT_NOTES.md's verify-before-publish rule.
+ * Every object is an honest CatalogIQ artifact ("grammar, not props" — the
+ * earlier pencil/ruler ornaments are gone): the ragged supplier card, the
+ * finished portrait listing (hero), the loadsheet stack, one AI-generated
+ * product photo printed as a specimen (the lone Mustard), the numbers as
+ * punched tags, the stack as a swatch rail. Repo-verified figures are shown
+ * plainly; the second-hand pilot figure is flagged "pending verification" per
+ * docs/CONTENT_NOTES.md's verify-before-publish rule.
+ *
+ * Source order is the mobile order (single-column tray): the paperwork story,
+ * the photo, the stack, then the numbers.
  */
 
-const CARDS = [
-  { label: "01 · Supplier data", Glyph: SupplierCardGlyph },
-  { label: "02 · Generated listing", Glyph: ListingCardGlyph },
-  { label: "03 · Loadsheet", Glyph: LoadsheetGlyph },
-] as const;
-
-/** The stack, laid out as labeled swatch chips. */
+/** The stack, laid out as a swatch rail of labeled chips. */
 const STACK: readonly string[] = [
   "Fastify",
   "TypeScript",
@@ -52,14 +50,21 @@ const STACK: readonly string[] = [
 interface Stat {
   value: string;
   unit: string;
+  /** Bento cell (CSS grid-area class) for the tag. */
+  area: string;
   /** Second-hand figure — carried, but flagged not-yet-verified. */
   pending?: boolean;
 }
 
 const STATS: readonly Stat[] = [
-  { value: "≈116k", unit: "Lines of code" },
-  { value: "428", unit: "Commits" },
-  { value: "15,000+", unit: "Listings, pilot", pending: true },
+  { value: "≈116k", unit: "Lines of code", area: styles.areaTagLoc },
+  { value: "428", unit: "Commits", area: styles.areaTagCommits },
+  {
+    value: "15,000+",
+    unit: "Listings, pilot",
+    area: styles.areaTagListings,
+    pending: true,
+  },
 ];
 
 export function CatalogIQInsert() {
@@ -67,20 +72,28 @@ export function CatalogIQInsert() {
     <figure className={styles.insert}>
       {/* The tray: an inset hairline frame is the surface the objects lie on. */}
       <Plate border="frame" className={styles.tray}>
-        {/* Row 1 — the paperwork: raw input, finished output, the export. */}
-        {CARDS.map(({ label, Glyph }) => (
-          <div key={label} className={styles.item}>
-            <Glyph className={styles.card} />
-            <Label className={styles.itemLabel}>{label}</Label>
-          </div>
-        ))}
-
-        {/* Row 2 — the arranger's tools flank the stack. */}
-        <div className={styles.item}>
-          <PencilGlyph className={styles.tool} />
-          <Label className={styles.itemLabel}>One pencil</Label>
+        {/* The paperwork: raw input, finished output (hero), the export. */}
+        <div className={`${styles.item} ${styles.areaSupplier}`}>
+          <SupplierCardGlyph className={styles.sheet} />
+          <Label className={styles.itemLabel}>01 · Supplier data</Label>
         </div>
-        <div className={styles.item}>
+        <div className={`${styles.item} ${styles.areaListing}`}>
+          <ListingCardGlyph className={styles.hero} />
+          <Label className={styles.itemLabel}>02 · Generated listing</Label>
+        </div>
+        <div className={`${styles.item} ${styles.areaLoadsheet}`}>
+          <LoadsheetGlyph className={styles.sheet} />
+          <Label className={styles.itemLabel}>03 · Loadsheet</Label>
+        </div>
+
+        {/* One generated product photo, printed as a specimen. */}
+        <div className={`${styles.item} ${styles.areaPhoto}`}>
+          <PhotoPrintGlyph className={styles.photo} />
+          <Label className={styles.itemLabel}>One product photo</Label>
+        </div>
+
+        {/* The stack, as a swatch rail across the tray. */}
+        <div className={`${styles.item} ${styles.areaChips}`}>
           <div className={styles.chips}>
             {STACK.map((tech) => (
               <Label key={tech} chip>
@@ -90,14 +103,10 @@ export function CatalogIQInsert() {
           </div>
           <Label className={styles.itemLabel}>The stack</Label>
         </div>
-        <div className={styles.item}>
-          <RulerGlyph className={styles.tool} />
-          <Label className={styles.itemLabel}>One ruler</Label>
-        </div>
 
-        {/* Row 3 — the numbers, as punched specimen tags. */}
+        {/* The numbers, as punched specimen tags. */}
         {STATS.map((stat) => (
-          <div key={stat.unit} className={styles.item}>
+          <div key={stat.unit} className={`${styles.item} ${stat.area}`}>
             <div className={styles.tag}>
               <span className={styles.tagHole} aria-hidden="true" />
               <span className={`register-h3 register-stat ${styles.statValue}`}>
@@ -111,7 +120,7 @@ export function CatalogIQInsert() {
       </Plate>
 
       <Caption as="figcaption" figure={1} numeral="roman">
-        CatalogIQ, knolled: the input, the output, the tools, the numbers.
+        CatalogIQ, knolled: the input, the output, the numbers.
       </Caption>
       <p className={`register-caption ${styles.footnote}`}>
         † Pilot figure is second-hand; pending verification before publish.

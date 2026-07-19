@@ -1,22 +1,22 @@
 /*
- * CatalogIQ knolled insert (PORT-18, second pass) — token-only, flat,
- * static-at-rest.
+ * CatalogIQ knolled insert (PORT-18) — token-only, flat, static-at-rest.
  *
- *   - One 3×3 master grid on the tray (odd column count, symmetric about the
- *     centreline — Brand Guide → Grid discipline), ONE gutter token throughout,
- *     so the whole reads as objects laid on a surface and shot from above.
- *   - The overhead read comes from the object glyphs (paper sheets, tools,
- *     tags), not from the grid alone — the first pass proved a grid of uniform
+ *   - Bento master grid (≥768px): one 6-column grid, ONE gutter token, mixed
+ *     object footprints — a portrait hero, landscape sheets, small tags, a
+ *     square print, a full-width swatch rail — packed on one rhythm and
+ *     roughly mirrored about the centreline (Brand Guide → Grid discipline).
+ *     Equal cells read as a table; mixed footprints on shared gutters read as
+ *     a knolled tray.
+ *   - The overhead read comes from the object glyphs (paper sheets, prints,
+ *     tags), not the grid alone — the first pass proved a grid of uniform
  *     tiles reads as a summary, not a flat-lay.
- *   - No shadows, sharp corners, no transitions (Hard Rules 1–2). The loadsheet
- *     stack is expressed by offset edges, not depth; the tray edge is the Plate
- *     frame-line.
+ *   - No shadows, sharp corners, no transitions (Hard Rules 1–2). Layering is
+ *     fill + hairline (Paper objects on the Plate tray); the loadsheet stack
+ *     is offset edges, not depth; the tray edge is the Plate frame-line.
  *
  * Mobile-first: below 768px the tray is a single centred column — a tall tray
  * of labeled objects — because the fixed-size registers (11px labels, mono
- * stats) cannot shrink with a 3-up column. Desktop restores the full 3×3
- * composition. Whether mobile should instead keep a scaled-down still is the
- * open question logged in the notes doc.
+ * stats) cannot shrink with narrow columns. Desktop restores the bento still.
  */
 
 .insert {
@@ -51,20 +51,27 @@
   text-align: center;
 }
 
-/* ── Row 1 — the paperwork ─────────────────────────────────────────────── */
+/* ── The objects ───────────────────────────────────────────────────────── */
 
-.card {
+/* Landscape paperwork: supplier card, loadsheet stack. */
+.sheet {
   width: min(100%, 16rem);
   height: auto;
 }
 
-/* ── Row 2 — the tools and the stack ───────────────────────────────────── */
-
-.tool {
-  width: min(100%, 12rem);
+/* The portrait listing card — the bento hero. */
+.hero {
+  width: min(100%, 15rem);
   height: auto;
 }
 
+/* The printed product photo. */
+.photo {
+  width: min(100%, 8rem);
+  height: auto;
+}
+
+/* The swatch rail. */
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -72,10 +79,9 @@
   gap: var(--space-1);
 }
 
-/* ── Row 3 — the numbers, as punched specimen tags ─────────────────────── */
-
+/* A punched specimen tag. */
 .tag {
-  width: min(100%, 13rem);
+  width: min(100%, 11rem);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -109,9 +115,46 @@
 }
 
 @media (min-width: 768px) {
-  /* The full 3×3 flat-lay. */
+  /* The bento still: hero centre spanning two rows, wings roughly mirrored
+     (two tags left; photo + tag right), the swatch rail underlining the lot. */
   .tray {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-areas:
+      "supplier supplier listing listing loadsheet loadsheet"
+      "tagloc   tagcom   listing listing photo     taglist"
+      "chips    chips    chips   chips   chips     chips";
     padding: var(--space-4);
+  }
+
+  .areaSupplier {
+    grid-area: supplier;
+  }
+
+  .areaListing {
+    grid-area: listing;
+  }
+
+  .areaLoadsheet {
+    grid-area: loadsheet;
+  }
+
+  .areaTagLoc {
+    grid-area: tagloc;
+  }
+
+  .areaTagCommits {
+    grid-area: tagcom;
+  }
+
+  .areaPhoto {
+    grid-area: photo;
+  }
+
+  .areaTagListings {
+    grid-area: taglist;
+  }
+
+  .areaChips {
+    grid-area: chips;
   }
 }
